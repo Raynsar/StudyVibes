@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profil — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.profile-hero{background:linear-gradient(135deg,var(--ink),#3d2e1c);border-radius:var(--radius);padding:36px;color:white;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.ph-avatar{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12);font-size:2.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:3px solid rgba(255,255,255,.2)}
+.ph-name{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;color:white}
+.ph-sub{color:rgba(255,255,255,.6);font-size:.85rem;margin-top:4px}
+.ph-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.activity-grid{display:flex;flex-wrap:wrap;gap:3px}
+.activity-cell{width:14px;height:14px;border-radius:3px;background:var(--warm)}
+.activity-cell.l1{background:#d4edda}.activity-cell.l2{background:#86c78a}
+.activity-cell.l3{background:var(--sage)}.activity-cell.l4{background:var(--sage-dark)}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:.87rem}
+.stat-row:last-child{border-bottom:none}
+.av-opt{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--warm);font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.av-opt.selected,.av-opt:hover{border-color:var(--terracotta);transform:scale(1.1)}
+.avatar-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="index.html">Study<span>Vibes</span> 🌿</a></div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="sideAvatar">🐸</div>
+      <div><div class="su-name" id="sideName">Loading...</div><div class="su-level" id="sideLevel">Level 1</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a href="courses.html"><span class="nav-icon">📚</span>Kursus</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span>Leaderboard</a>
+      <a href="profile.html"><span class="nav-icon">👤</span>Profil Saya</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="index.html"><span>🌿</span>Beranda</a>
+      <a data-signout><span>🚪</span>Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="topbar-title">Profil Saya</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-xp">⭐ <span id="topXP">0</span> XP</div>
+        <span id="topAvatar" style="font-size:1.6rem">🐸</span>
+      </div>
+    </div>
+
+    <div class="page-content" id="pageContent">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" id="editModalClose">✕</button>
+    <h3 style="margin-bottom:24px">✏️ Edit Profil</h3>
+    <div class="form-group">
+      <label class="form-label">Nama Lengkap</label>
+      <input id="e-name" type="text" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input id="e-user" type="text" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Pilih Avatar</label>
+      <div class="avatar-grid" id="editAvatarGrid"></div>
+      <input type="hidden" id="e-avatar" value="🐸">
+    </div>
+    <button class="btn btn-primary btn-block" id="btnSaveProfile">💾 Simpan Perubahan</button>
+  </div>
+</div>
+
+<script type="module">
+import { requireAuth, signOut } from './js/supabase.js';
+import { initProfile, openEditModal, saveProfile, changePassword } from './js/profile.js';
+import { initSidebar, initSignOut, closeModal } from './js/ui.js';
+
+// Expose for inline onclick in dynamically rendered HTML
+window.openEditModal  = openEditModal;
+window.changePassword = changePassword;
+
+initSignOut();
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// Edit modal buttons
+document.getElementById('editModalClose')?.addEventListener('click', () => closeModal('editModal'));
+document.getElementById('editModal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeModal('editModal');
+});
+document.getElementById('btnSaveProfile')?.addEventListener('click', () => saveProfile());
+
+async function init() {
+  const user = await requireAuth();
+  if (!user) return;
+  initSidebar('profile.html');
+  await initProfile(user.id);
+}
+
+init();
+</script>
+</body>
+</html>

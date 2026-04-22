@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35;pointer-events:none}
+.b1{width:500px;height:500px;background:var(--sage-light);top:-150px;right:-100px;animation:f1 9s ease-in-out infinite}
+.b2{width:400px;height:400px;background:var(--butter);bottom:-100px;left:-80px;animation:f2 11s ease-in-out infinite}
+.b3{width:250px;height:250px;background:var(--lavender);top:40%;left:35%;animation:f3 7s ease-in-out infinite}
+@keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,15px)}}
+@keyframes f2{0%,100%{transform:translate(0,0)}50%{transform:translate(15px,-20px)}}
+@keyframes f3{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,12px)}}
+.login-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:48px 44px;width:100%;max-width:460px;position:relative;z-index:2;box-shadow:0 20px 60px rgba(42,31,20,.12);animation:fadeUp .6s ease both}
+.login-logo{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:800;margin-bottom:8px}
+.login-logo span{color:var(--terracotta)}
+.login-sub{color:var(--ink-soft);font-size:.9rem;margin-bottom:32px}
+.tab-row{display:flex;gap:4px;background:var(--warm);border-radius:100px;padding:4px;margin-bottom:28px}
+.tab-btn{flex:1;padding:9px;border:none;border-radius:100px;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:var(--ink-soft)}
+.tab-btn.active{background:white;color:var(--ink);box-shadow:0 2px 8px rgba(42,31,20,.1)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.avatar-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.av-opt{width:38px;height:38px;border-radius:50%;border:2px solid var(--border);background:var(--warm);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.av-opt.selected,.av-opt:hover{border-color:var(--terracotta);transform:scale(1.1)}
+.login-footer{text-align:center;margin-top:18px;font-size:.82rem;color:var(--ink-soft)}
+.login-footer a{color:var(--terracotta);font-weight:600;cursor:pointer}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:.82rem;margin-bottom:20px;cursor:pointer;transition:color .2s;text-decoration:none}
+.back-link:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="login-page">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="login-card">
+    <a href="index.html" class="back-link">← Kembali ke beranda</a>
+    <div class="login-logo">Study<span>Vibes</span> 🌿</div>
+    <p class="login-sub">Belajar santai, tetap produktif.</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabBtnLogin" onclick="switchTab('login')">Masuk</button>
+      <button class="tab-btn" id="tabBtnRegister" onclick="switchTab('register')">Daftar</button>
+    </div>
+
+    <!-- LOGIN PANE -->
+    <div id="pane-login" class="tab-pane active">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="l-email" type="email" class="form-input" placeholder="kamu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="l-pass" type="password" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-block" id="btnLogin">Masuk →</button>
+      <div class="login-footer">Belum punya akun? <a onclick="switchTab('register')">Daftar gratis</a></div>
+    </div>
+
+    <!-- REGISTER PANE -->
+    <div id="pane-register" class="tab-pane">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input id="r-name" type="text" class="form-input" placeholder="Nama kamu">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input id="r-user" type="text" class="form-input" placeholder="username_unik">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="r-email" type="email" class="form-input" placeholder="kamu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="r-pass" type="password" class="form-input" placeholder="Min. 8 karakter">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pilih Avatar</label>
+        <div class="avatar-picker" id="avatarPicker"></div>
+        <input type="hidden" id="r-avatar" value="🐸">
+      </div>
+      <button class="btn btn-primary btn-block" id="btnRegister">Buat Akun 🎉</button>
+      <div class="login-footer">Sudah punya akun? <a onclick="switchTab('login')">Masuk</a></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase, toast, AVATARS } from './js/supabase.js';
+
+// Redirect if already logged in
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    const { data: p } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    location.href = p?.role === 'admin' ? 'admin.html' : 'dashboard.html';
+  }
+})();
+
+// Avatar picker
+const picker = document.getElementById('avatarPicker');
+AVATARS.forEach(a => {
+  const d = document.createElement('div');
+  d.className = 'av-opt' + (a === '🐸' ? ' selected' : '');
+  d.textContent = a;
+  d.onclick = () => {
+    document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('selected'));
+    d.classList.add('selected');
+    document.getElementById('r-avatar').value = a;
+  };
+  picker.appendChild(d);
+});
+
+// Switch tab
+window.switchTab = t => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane-' + t).classList.add('active');
+};
+
+// LOGIN
+document.getElementById('btnLogin').addEventListener('click', async () => {
+  const btn   = document.getElementById('btnLogin');
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!email || !pass) { toast('Isi semua field ya!', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Memproses...';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) { toast('Email atau password salah!', 'error'); btn.disabled = false; btn.textContent = 'Masuk →'; return; }
+  const { data: p } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+  toast('Selamat datang kembali! 👋', 'success');
+  setTimeout(() => location.href = p?.role === 'admin' ? 'admin.html' : 'dashboard.html', 800);
+});
+
+// REGISTER
+document.getElementById('btnRegister').addEventListener('click', async () => {
+  const btn    = document.getElementById('btnRegister');
+  const name   = document.getElementById('r-name').value.trim();
+  const uname  = document.getElementById('r-user').value.trim();
+  const email  = document.getElementById('r-email').value.trim();
+  const pass   = document.getElementById('r-pass').value;
+  const avatar = document.getElementById('r-avatar').value;
+  if (!name || !uname || !email || !pass) { toast('Isi semua field ya!', 'error'); return; }
+  if (pass.length < 8) { toast('Password minimal 8 karakter!', 'error'); return; }
+  // Check username duplicate
+  const { data: ex } = await supabase.from('profiles').select('id').eq('username', uname).maybeSingle();
+  if (ex) { toast('Username sudah dipakai!', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Membuat akun...';
+  const { error } = await supabase.auth.signUp({
+    email, password: pass,
+    options: { data: { username: uname, full_name: name, avatar_emoji: avatar } }
+  });
+  if (error) { toast(error.message, 'error'); btn.disabled = false; btn.textContent = 'Buat Akun 🎉'; return; }
+  toast('Akun berhasil dibuat! Silakan login 🎉', 'success');
+  setTimeout(() => switchTab('login'), 1500);
+  btn.disabled = false; btn.textContent = 'Buat Akun 🎉';
+});
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('pane-login').classList.contains('active')) document.getElementById('btnLogin').click();
+  else document.getElementById('btnRegister').click();
+});
+</script>
+</body>
+</html>

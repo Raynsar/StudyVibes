@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>StudyVibes 🌿 — Belajar Santai, Tetap Produktif</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{cursor:default}
+nav{position:fixed;top:0;width:100%;padding:18px 56px;display:flex;align-items:center;justify-content:space-between;z-index:100;backdrop-filter:blur(16px);background:rgba(250,246,238,.88);border-bottom:1px solid var(--border);transition:padding .3s}
+nav.scrolled{padding:12px 56px}
+.nav-logo{font-family:'Fraunces',serif;font-size:1.45rem;font-weight:700;color:var(--ink)}
+.nav-logo span{color:var(--terracotta)}
+.nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+.nav-links a{color:var(--ink-soft);font-size:.88rem;font-weight:500;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:2px;background:var(--terracotta);transition:width .3s}
+.nav-links a:hover{color:var(--ink)}.nav-links a:hover::after{width:100%}
+.btn-nav{background:var(--ink)!important;color:white!important;padding:10px 22px!important;border-radius:100px;font-weight:600!important;font-size:.85rem!important}
+.btn-nav::after{display:none!important}.btn-nav:hover{background:var(--terracotta)!important}
+.hero{min-height:100vh;display:flex;align-items:center;padding:120px 56px 80px;position:relative;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.35;pointer-events:none}
+.b1{width:520px;height:520px;background:var(--sage-light);top:-120px;right:-80px;animation:fa 9s ease-in-out infinite}
+.b2{width:380px;height:380px;background:var(--butter);bottom:-60px;left:5%;animation:fb 11s ease-in-out infinite}
+.b3{width:280px;height:280px;background:var(--lavender);top:35%;left:38%;animation:fc 7s ease-in-out infinite}
+@keyframes fa{0%,100%{transform:translate(0,0)}50%{transform:translate(-25px,18px)}}
+@keyframes fb{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-22px)}}
+@keyframes fc{0%,100%{transform:translate(0,0)}50%{transform:translate(-12px,14px)}}
+.hero-content{max-width:640px;position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:var(--sage);color:white;border-radius:100px;font-size:.78rem;font-weight:600;margin-bottom:28px;animation:fadeUp .6s ease both}
+.hero-sub{margin-top:20px;font-size:1.05rem;color:var(--ink-soft);line-height:1.75;max-width:500px;animation:fadeUp .6s .15s ease both}
+.hero-actions{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;animation:fadeUp .6s .25s ease both}
+.hero-stats{display:flex;gap:40px;margin-top:52px;animation:fadeUp .6s .35s ease both}
+.stat-num{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:700}
+.stat-label{font-size:.78rem;color:var(--ink-soft);margin-top:3px}
+.hero-visual{position:absolute;right:6%;top:50%;transform:translateY(-50%);width:380px;z-index:2;animation:fadeUp .8s .2s ease both}
+.floating-card{background:var(--card-bg);border:1px solid var(--border);border-radius:28px;padding:28px;box-shadow:0 20px 60px rgba(42,31,20,.12);position:relative}
+.mini-badge{position:absolute;top:-16px;right:28px;background:var(--butter);color:var(--ink);padding:6px 16px;border-radius:100px;font-size:.76rem;font-weight:700;animation:bobble 2.5s ease-in-out infinite}
+@keyframes bobble{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.fc-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.fc-avatar{width:44px;height:44px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.fc-name{font-weight:600;font-size:.9rem}.fc-sub{font-size:.7rem;color:var(--ink-soft);margin-top:2px}
+.float-widgets{display:flex;gap:10px;margin-top:18px}
+.fw-item{flex:1;background:var(--warm);border-radius:14px;padding:12px 8px;text-align:center}
+.fw-icon{font-size:1.2rem}.fw-val{font-family:'Fraunces',serif;font-size:.95rem;font-weight:700;margin-top:3px}.fw-lab{font-size:.65rem;color:var(--ink-soft)}
+.sticker{position:absolute;background:white;border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:.78rem;font-weight:600;box-shadow:0 4px 16px rgba(42,31,20,.1)}
+.st1{left:-55px;bottom:50px;background:#e8f4e8;animation:bobble 3s ease-in-out infinite}
+.st2{right:-10px;top:45px;background:#fff9e0;animation:bobble 2s .5s ease-in-out infinite}
+section{padding:100px 56px}
+.features-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.feat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:32px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.feat-card:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.fc-big{grid-column:span 2;background:linear-gradient(135deg,var(--ink),#3d2e1c);color:white}
+.fc-big h3,.fc-big p{color:white}.fc-big p{color:rgba(255,255,255,.6)}
+.fc-wide{grid-column:span 2}
+.feat-icon{font-size:2.2rem;margin-bottom:16px}.feat-card p{font-size:.88rem;color:var(--ink-soft);line-height:1.65}
+.courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.course-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .25s,box-shadow .25s}
+.course-card:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.course-thumb{height:140px;display:flex;align-items:center;justify-content:center;font-size:3rem}
+.course-body{padding:18px 20px 20px}
+.course-cat{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:5px}
+.course-title{font-size:.95rem;font-weight:600;margin-bottom:8px;line-height:1.4}
+.course-meta{display:flex;gap:10px;font-size:.72rem;color:var(--ink-soft);margin-bottom:14px}
+.cta-section{background:linear-gradient(135deg,var(--sage-dark),var(--ink));color:white;text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(245,200,66,.1),transparent 55%);pointer-events:none}
+.cta-section h2{color:white;margin-bottom:16px}.cta-section p{color:rgba(255,255,255,.6);margin-bottom:36px}
+footer{background:var(--ink);color:white;padding:60px 56px 32px}
+.footer-inner{display:flex;gap:60px;justify-content:space-between;flex-wrap:wrap;margin-bottom:48px}
+.footer-brand p{font-size:.85rem;color:rgba(255,255,255,.45);max-width:240px;line-height:1.6;margin-top:10px}
+.footer-links{display:flex;gap:48px}.fl-col{display:flex;flex-direction:column;gap:10px}
+.fl-title{font-weight:600;font-size:.78rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.fl-col a{color:rgba(255,255,255,.65);font-size:.85rem;transition:color .2s}.fl-col a:hover{color:white}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;font-size:.76rem;color:rgba(255,255,255,.3);text-align:center}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:3px}
+@media(max-width:1100px){.hero-visual{display:none}.features-grid{grid-template-columns:repeat(2,1fr)}.fc-big,.fc-wide{grid-column:span 2}}
+@media(max-width:768px){nav{padding:16px 24px}.hero{padding:100px 24px 60px}section{padding:72px 24px}footer{padding:48px 24px 28px}.hero-stats{gap:24px}.features-grid{grid-template-columns:1fr}.fc-big,.fc-wide{grid-column:1}.hamburger{display:flex}.nav-links{display:none;flex-direction:column;position:absolute;top:70px;left:0;width:100%;background:var(--cream);padding:20px 24px;gap:18px;border-bottom:1px solid var(--border)}.nav-links.open{display:flex}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">Study<span>Vibes</span> 🌿</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#features">Fitur</a></li>
+    <li><a href="#courses">Kursus</a></li>
+    <li><a href="login.html">Login</a></li>
+    <li><a href="login.html" class="btn-nav">Mulai Gratis ✨</a></li>
+  </ul>
+  <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="hero-content">
+    <div class="hero-tag">🎯 Platform Belajar Gratis #1</div>
+    <h1>Belajar itu<br/><em>Santai</em>,<br/>bukan Stres!</h1>
+    <p class="hero-sub">StudyVibes hadir untuk kamu yang pengen upgrade skill sambil tetap menikmati hidup. Timer Pomodoro, kursus gratis, leaderboard realtime — semua ada di sini.</p>
+    <div class="hero-actions">
+      <a href="login.html" class="btn btn-primary">Mulai Gratis 🌿</a>
+      <a href="#courses" class="btn btn-secondary">Lihat Kursus 📚</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num" data-count="12000" data-suffix="+">0</div><div class="stat-label">Pelajar aktif</div></div>
+      <div><div class="stat-num" data-count="84" data-suffix="+">0</div><div class="stat-label">Kursus tersedia</div></div>
+      <div><div class="stat-num" data-count="100" data-suffix="%">0</div><div class="stat-label">Gratis</div></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="floating-card">
+      <div class="mini-badge">🔥 Streak 7 hari!</div>
+      <div class="fc-header">
+        <div class="fc-avatar">🐸</div>
+        <div><div class="fc-name">Halo, Rizky! 👋</div><div class="fc-sub">Level 12 · Junior Dev</div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="progress-label"><span>JavaScript</span><span>72%</span></div>
+        <div class="progress-bar"><div class="progress-fill pf-tc" style="width:72%"></div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="progress-label"><span>UI/UX Design</span><span>55%</span></div>
+        <div class="progress-bar"><div class="progress-fill pf-sage" style="width:55%"></div></div>
+      </div>
+      <div class="float-widgets">
+        <div class="fw-item"><div class="fw-icon">⏱️</div><div class="fw-val">2h 40m</div><div class="fw-lab">Hari ini</div></div>
+        <div class="fw-item"><div class="fw-icon">⭐</div><div class="fw-val">1,240</div><div class="fw-lab">XP Total</div></div>
+        <div class="fw-item"><div class="fw-icon">🏅</div><div class="fw-val">#8</div><div class="fw-lab">Ranking</div></div>
+      </div>
+    </div>
+    <div class="sticker st1">🎧 Lo-fi vibes...</div>
+    <div class="sticker st2">+50 XP 🌟</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--warm)">
+  <div style="margin-bottom:48px">
+    <div class="section-label">✨ Kenapa StudyVibes?</div>
+    <h2>Belajar yang <em>Beda</em></h2>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card fc-big"><div class="feat-icon">🎮</div><h3>Gamifikasi Seru</h3><p>XP, badge, level, dan leaderboard realtime bikin belajar se-adiktif main game.</p></div>
+    <div class="feat-card"><div class="feat-icon">⏱️</div><h3>Pomodoro Timer</h3><p>Timer fokus dengan berbagai mode. Setiap sesi selesai = XP bertambah otomatis ke database.</p></div>
+    <div class="feat-card"><div class="feat-icon">📊</div><h3>Progress Tracker</h3><p>Heatmap aktivitas, grafik XP, dan statistik detail belajar kamu setiap hari.</p></div>
+    <div class="feat-card fc-wide"><div class="feat-icon">🏆</div><h3>Leaderboard Realtime</h3><p>Peringkat update otomatis via Supabase WebSocket setiap ada perubahan XP. Tanpa reload!</p></div>
+    <div class="feat-card"><div class="feat-icon">🎁</div><h3>100% Gratis</h3><p>Semua kursus gratis selamanya. Tidak ada paywall, tidak ada fitur premium tersembunyi.</p></div>
+  </div>
+</section>
+
+<!-- COURSES PREVIEW -->
+<section id="courses">
+  <div style="margin-bottom:36px">
+    <div class="section-label">📚 Kursus Populer</div>
+    <h2>Mulai dari mana <em>kamu</em> suka</h2>
+    <p style="color:var(--ink-soft);margin-top:8px">Semua level diterima, semua gratis!</p>
+  </div>
+  <div class="courses-grid" id="coursesPreview"><div class="spinner"></div></div>
+  <div style="text-align:center;margin-top:36px">
+    <a href="login.html" class="btn btn-dark">Lihat Semua Kursus →</a>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div style="position:relative;z-index:1;max-width:620px;margin:0 auto">
+    <div style="font-size:3.5rem;margin-bottom:20px">🚀</div>
+    <h2>Siap mulai perjalanan <em style="color:var(--butter)">belajarmu</em>?</h2>
+    <p>Daftar gratis sekarang. Tidak perlu kartu kredit.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="login.html" class="btn btn-primary">Daftar Gratis 🌿</a>
+      <a href="login.html" class="btn" style="background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.25)">Login →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700">Study<span style="color:var(--terracotta-light)">Vibes</span> 🌿</div>
+      <p>Belajar itu perjalanan, bukan lomba sprint. Nikmati prosesnya.</p>
+    </div>
+    <div class="footer-links">
+      <div class="fl-col"><div class="fl-title">Platform</div><a href="login.html">Kursus</a><a href="login.html">Pomodoro</a><a href="login.html">Leaderboard</a></div>
+      <div class="fl-col"><div class="fl-title">Info</div><a href="#">Tentang</a><a href="#">Blog</a><a href="#">Kontak</a></div>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 StudyVibes · Made with 🌿 for learners everywhere</div>
+</footer>
+
+<script type="module">
+import { supabase, toast } from './js/supabase.js';
+import { initNavbarScroll, animateCounters } from './js/ui.js';
+
+// Redirect if already logged in
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    const { data: p } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    location.href = p?.role === 'admin' ? 'admin.html' : 'dashboard.html';
+  }
+})();
+
+// Load course preview
+(async () => {
+  const { data } = await supabase.from('courses').select('*').eq('is_published', true).limit(6);
+  const grid = document.getElementById('coursesPreview');
+  if (!data?.length) { grid.innerHTML = '<p style="color:var(--ink-soft)">Kursus segera tersedia!</p>'; return; }
+  const catLabel = c => ({ coding:'💻 Coding', design:'🎨 Design', data:'📊 Data', soft:'🧠 Soft Skill' }[c] || c);
+  grid.innerHTML = data.map(c => `
+    <div class="course-card">
+      <div class="course-thumb" style="background:${c.color}">${c.emoji}</div>
+      <div class="course-body">
+        <div class="course-cat">${catLabel(c.category)}</div>
+        <div class="course-title">${c.title}</div>
+        <div class="course-meta"><span>📖 ${c.total_lessons} pelajaran</span><span>📊 ${c.difficulty}</span></div>
+        <a href="login.html" class="badge badge-green" style="font-size:.72rem;cursor:pointer">🎁 Gratis → Mulai</a>
+      </div>
+    </div>`).join('');
+})();
+
+// Counter animation on scroll
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { animateCounters(); obs.disconnect(); } });
+}, { threshold: .5 });
+const hs = document.querySelector('.hero-stats');
+if (hs) obs.observe(hs);
+
+// Navbar scroll
+initNavbarScroll('navbar');
+</script>
+</body>
+</html>

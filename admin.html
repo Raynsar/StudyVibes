@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Panel — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root{--sidebar-w:240px}
+.sidebar{background:#1a1208}
+.sidebar-nav a.active{background:rgba(245,200,66,.12);color:var(--butter);border-left-color:var(--butter)}
+.admin-badge{background:var(--butter);color:var(--ink);padding:3px 10px;border-radius:100px;font-size:.62rem;font-weight:700;margin-left:6px;vertical-align:middle}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.action-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.search-input{padding:9px 16px;background:var(--warm);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.85rem;outline:none;width:260px;transition:border-color .2s}
+.search-input:focus{border-color:var(--terracotta)}
+.user-avatar-cell{display:flex;align-items:center;gap:10px}
+.ua-emoji{width:34px;height:34px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.ua-name{font-weight:600;font-size:.88rem}.ua-email{font-size:.7rem;color:var(--ink-soft)}
+.chart-bar-wrap{display:flex;flex-direction:column;gap:10px}
+.chart-row{display:flex;align-items:center;gap:12px;font-size:.82rem}
+.chart-label{width:130px;color:var(--ink-soft);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-bar-bg{flex:1;height:20px;background:var(--warm);border-radius:100px;overflow:hidden}
+.chart-bar-fill{height:100%;background:linear-gradient(90deg,var(--terracotta),var(--terracotta-light));border-radius:100px;transition:width .8s ease}
+.chart-val{font-weight:700;font-family:'Fraunces',serif;width:55px;text-align:right;flex-shrink:0}
+.section-nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:16px}
+.snav-btn{padding:8px 18px;background:none;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:'Sora',sans-serif;font-size:.83rem;font-weight:500;color:var(--ink-soft);transition:all .2s}
+.snav-btn.active,.snav-btn:hover{background:var(--ink);color:white}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="index.html">Study<span>Vibes</span> 🌿</a></div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="sideAvatar">👑</div>
+      <div><div class="su-name" id="sideName">Admin</div><div class="su-level" style="color:var(--butter)">Administrator</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Admin Panel</div>
+      <a href="#" id="navOverview"  onclick="setSection('overview')" ><span class="nav-icon">📊</span>Overview</a>
+      <a href="#" id="navUsers"     onclick="setSection('users')"    ><span class="nav-icon">👥</span>Pengguna</a>
+      <a href="#" id="navCourses"   onclick="setSection('courses')"  ><span class="nav-icon">📚</span>Kursus</a>
+      <a href="#" id="navLessons"   onclick="setSection('lessons')"  ><span class="nav-icon">📋</span>Materi</a>
+      <a href="#" id="navSessions"  onclick="setSection('sessions')" ><span class="nav-icon">⏱️</span>Sesi Belajar</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="dashboard.html"><span>🏠</span>Dashboard User</a>
+      <a data-signout><span>🚪</span>Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="topbar-title" id="topbarTitle">Overview <span class="admin-badge">ADMIN</span></div>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:.8rem;color:var(--ink-soft)">👑 Admin Mode</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- OVERVIEW -->
+      <div id="pane-overview" class="tab-pane active">
+        <div class="stats-grid stagger" id="overviewStats"><div class="spinner"></div></div>
+        <div class="grid-2" style="margin-top:8px">
+          <div class="card-flat">
+            <h3 style="margin-bottom:18px">🏆 Top 10 Pengguna (XP)</h3>
+            <div id="topUsersChart"></div>
+          </div>
+          <div class="card-flat">
+            <h3 style="margin-bottom:18px">📚 Kursus Terpopuler</h3>
+            <div id="topCoursesChart"></div>
+          </div>
+        </div>
+        <div class="card-flat" style="margin-top:22px">
+          <h3 style="margin-bottom:18px">⏱️ Aktivitas Sesi (7 hari terakhir)</h3>
+          <div id="sessionChart"></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div id="pane-users" class="tab-pane">
+        <div class="action-bar">
+          <input type="text" class="search-input" id="userSearch" placeholder="🔍 Cari nama/username...">
+          <button class="btn btn-primary btn-sm" id="btnAddUser">+ Tambah User</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pengguna</th><th>Level</th><th>XP</th><th>Streak</th><th>Role</th><th>Aksi</th></tr></thead>
+            <tbody id="usersTable"><tr><td colspan="6" style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COURSES -->
+      <div id="pane-courses" class="tab-pane">
+        <div class="action-bar">
+          <h3>📚 Manajemen Kursus</h3>
+          <button class="btn btn-primary btn-sm" id="btnAddCourse">+ Tambah Kursus</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kursus</th><th>Kategori</th><th>Level</th><th>Pelajaran</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="coursesTable"><tr><td colspan="6" style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LESSONS -->
+      <div id="pane-lessons" class="tab-pane">
+        <div class="action-bar">
+          <select class="search-input form-select" id="lessonCourseFilter" style="width:260px">
+            <option value="">Pilih Kursus...</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="btnAddLesson">+ Tambah Materi</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>No</th><th>Judul Materi</th><th>XP Reward</th><th>Kursus</th><th>Aksi</th></tr></thead>
+            <tbody id="lessonsTable"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-soft)">Pilih kursus terlebih dahulu</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div id="pane-sessions" class="tab-pane">
+        <div class="action-bar">
+          <h3>⏱️ Log Sesi Belajar</h3>
+          <span id="sessionCount" style="font-size:.85rem;color:var(--ink-soft)"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pengguna</th><th>Durasi</th><th>Mode</th><th>XP</th><th>Waktu</th></tr></thead>
+            <tbody id="sessionsTable"><tr><td colspan="5" style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal"><button class="modal-close" onclick="closeModalById('userModal')">✕</button><div id="userModalContent"></div></div>
+</div>
+<div class="modal-overlay" id="courseModal">
+  <div class="modal"><button class="modal-close" onclick="closeModalById('courseModal')">✕</button><div id="courseModalContent"></div></div>
+</div>
+<div class="modal-overlay" id="lessonModal">
+  <div class="modal"><button class="modal-close" onclick="closeModalById('lessonModal')">✕</button><div id="lessonModalContent"></div></div>
+</div>
+
+<script type="module">
+import { requireAdmin, signOut } from './js/supabase.js';
+import {
+  loadOverview,
+  loadUsers, renderUsers, filterUsers,
+  openEditUser, saveUser, toggleAdmin, deleteUser, openAddUser, createUser,
+  loadAdminCourses, openAddCourse, editCourse, saveCourse, toggleCourse, deleteCourse,
+  loadLessons, openAddLesson, editLesson, saveLesson, deleteLesson,
+  loadSessions
+} from './js/admin.js';
+import { initSignOut, closeModal } from './js/ui.js';
+
+// ---- Expose globals needed by dynamically-rendered HTML ----
+window.closeModalById = id => closeModal(id);
+window.editUser       = openEditUser;
+window.saveUser       = saveUser;
+window.toggleAdmin    = toggleAdmin;
+window.deleteUser     = deleteUser;
+window.createUser     = createUser;
+window.editCourse     = editCourse;
+window.saveCourse     = saveCourse;
+window.toggleCourse   = toggleCourse;
+window.deleteCourse   = deleteCourse;
+window.editLesson     = editLesson;
+window.saveLesson     = saveLesson;
+window.deleteLesson   = deleteLesson;
+window.loadLessons    = loadLessons;
+
+initSignOut();
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// Section switch
+const sectionTitles = {
+  overview: 'Overview',
+  users:    'Pengguna',
+  courses:  'Kursus',
+  lessons:  'Materi',
+  sessions: 'Sesi Belajar'
+};
+
+window.setSection = sec => {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane-' + sec).classList.add('active');
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('nav' + sec.charAt(0).toUpperCase() + sec.slice(1))?.classList.add('active');
+  document.getElementById('topbarTitle').innerHTML = `${sectionTitles[sec]} <span class="admin-badge">ADMIN</span>`;
+};
+
+// Search users
+document.getElementById('userSearch')?.addEventListener('input', filterUsers);
+
+// Lesson course filter
+document.getElementById('lessonCourseFilter')?.addEventListener('change', loadLessons);
+
+// Button handlers
+document.getElementById('btnAddUser')?.addEventListener('click',   openAddUser);
+document.getElementById('btnAddCourse')?.addEventListener('click', openAddCourse);
+document.getElementById('btnAddLesson')?.addEventListener('click', openAddLesson);
+
+// Close modals on overlay click
+['userModal','courseModal','lessonModal'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', e => {
+    if (e.target === document.getElementById(id)) closeModal(id);
+  });
+});
+
+// ---- INIT ----
+async function init() {
+  const auth = await requireAdmin();
+  if (!auth) return;
+
+  document.getElementById('sideAvatar').textContent = auth.profile.avatar_emoji;
+  document.getElementById('sideName').textContent   = auth.profile.full_name || auth.profile.username;
+
+  // Set overview as active nav
+  document.getElementById('navOverview')?.classList.add('active');
+
+  // Load all data
+  await Promise.all([
+    loadOverview(),
+    loadUsers(),
+    loadAdminCourses(),
+    loadSessions()
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>

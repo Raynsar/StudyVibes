@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Leaderboard — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.lb-hero{background:linear-gradient(135deg,var(--ink),#3d2e1c);border-radius:var(--radius);padding:36px;color:white;margin-bottom:28px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.lb-hero::before{content:'🏆';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.06;pointer-events:none}
+.lb-hero h2{color:white;margin-bottom:8px}.lb-hero p{color:rgba(255,255,255,.6);font-size:.88rem}
+.lb-live{display:flex;align-items:center;gap:8px;background:rgba(127,168,122,.2);padding:6px 14px;border-radius:100px;font-size:.75rem;color:var(--sage-light);font-weight:600;flex-shrink:0}
+.lb-dot{width:8px;height:8px;background:var(--sage);border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:36px;flex-wrap:wrap}
+.podium-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.podium-avatar{font-size:2rem;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--border);background:var(--warm)}
+.p1 .podium-avatar{width:68px;height:68px;font-size:2.4rem;border-color:var(--butter);box-shadow:0 0 20px rgba(245,200,66,.3)}
+.podium-me{box-shadow:0 0 0 3px var(--terracotta)!important}
+.p2 .podium-avatar{border-color:#a0a0a0}.p3 .podium-avatar{border-color:#a0714e}
+.podium-name{font-size:.78rem;font-weight:600;text-align:center;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.podium-xp{font-size:.7rem;color:var(--ink-soft)}
+.podium-bar{border-radius:8px 8px 0 0;width:70px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;font-family:'Fraunces',serif;color:white}
+.p1 .podium-bar{height:80px;background:linear-gradient(180deg,var(--butter),#d4a017)}
+.p2 .podium-bar{height:60px;background:linear-gradient(180deg,#c0c0c0,#888)}
+.p3 .podium-bar{height:44px;background:linear-gradient(180deg,#c49a6c,#a0714e)}
+.lb-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);transition:transform .2s}
+.lb-row:hover{transform:translateX(4px)}.lb-row.me{border-color:var(--terracotta);background:rgba(201,112,89,.04)}
+.lb-rank{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;width:32px;text-align:center;color:var(--ink-soft)}
+.lb-rank.gold{color:#d4a017}.lb-rank.silver{color:#a0a0a0}.lb-rank.bronze{color:#a0714e}
+.lb-avatar{font-size:1.5rem}.lb-info{flex:1}
+.lb-name{font-weight:600;font-size:.88rem}.lb-sub{font-size:.7rem;color:var(--ink-soft);margin-top:2px}
+.lb-xp-wrap{text-align:right}
+.lb-xp{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:var(--terracotta)}
+.lb-bar-mini{width:80px;height:5px;background:var(--warm);border-radius:100px;overflow:hidden;margin-top:5px}
+.lb-bar-fill{height:100%;background:var(--sage);border-radius:100px}
+.my-rank-card{background:linear-gradient(135deg,var(--terracotta),var(--terracotta-light));color:white;border-radius:var(--radius-sm);padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.mrc-rank{font-family:'Fraunces',serif;font-size:2.8rem;font-weight:800;line-height:1}
+.mrc-info h4{font-size:.95rem;margin-bottom:4px}.mrc-info p{font-size:.75rem;opacity:.8}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="index.html">Study<span>Vibes</span> 🌿</a></div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="sideAvatar">🐸</div>
+      <div><div class="su-name" id="sideName">Loading...</div><div class="su-level" id="sideLevel">Level 1</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a href="courses.html"><span class="nav-icon">📚</span>Kursus</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span>Leaderboard</a>
+      <a href="profile.html"><span class="nav-icon">👤</span>Profil Saya</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="index.html"><span>🌿</span>Beranda</a>
+      <a data-signout><span>🚪</span>Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="topbar-title">Leaderboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="lb-live"><div class="lb-dot"></div>LIVE</div>
+        <div class="topbar-xp">⭐ <span id="topXP">0</span> XP</div>
+        <span id="topAvatar" style="font-size:1.6rem">🐸</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="lb-hero">
+        <div>
+          <h2>🏆 Ranking Minggu Ini</h2>
+          <p>Update realtime setiap ada perubahan XP. Belajar lebih banyak, naik peringkat!</p>
+        </div>
+        <div class="lb-live"><div class="lb-dot"></div>Realtime via Supabase</div>
+      </div>
+
+      <!-- My rank card -->
+      <div id="myRankCard" style="display:none"></div>
+
+      <!-- Podium top 3 -->
+      <div id="podium" class="podium"><div class="spinner"></div></div>
+
+      <!-- Full list -->
+      <div class="card-flat">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <h3>📋 Semua Peringkat</h3>
+          <span style="font-size:.78rem;color:var(--ink-soft)" id="totalUsers"></span>
+        </div>
+        <div id="lbList" style="display:flex;flex-direction:column;gap:8px">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAuth, getProfile, signOut } from './js/supabase.js';
+import { initLeaderboard } from './js/leaderboard.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut } from './js/ui.js';
+
+initSignOut();
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+async function init() {
+  const user = await requireAuth();
+  if (!user) return;
+
+  const profile = await getProfile(user.id);
+  setSidebarUser(profile);
+  setTopbarUser(profile);
+  initSidebar('leaderboard.html');
+
+  await initLeaderboard(user.id);
+}
+
+init();
+</script>
+</body>
+</html>

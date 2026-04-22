@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.xp-info{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-soft);margin-bottom:6px}
+.streak-card{background:linear-gradient(135deg,var(--terracotta),var(--terracotta-light));color:white;border-radius:var(--radius-sm);padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.streak-num{font-family:'Fraunces',serif;font-size:2.8rem;font-weight:800;line-height:1}
+.streak-info h4{font-size:1rem;margin-bottom:4px}.streak-info p{font-size:.75rem;opacity:.8}
+.course-progress-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+.course-progress-item:last-child{border-bottom:none}
+.cpi-icon{width:44px;height:44px;background:var(--warm);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+.cpi-info{flex:1}.cpi-title{font-weight:600;font-size:.88rem;margin-bottom:5px}
+.cpi-bar{height:6px;background:var(--warm);border-radius:100px;overflow:hidden}
+.cpi-fill{height:100%;background:linear-gradient(90deg,var(--terracotta),var(--terracotta-light));border-radius:100px}
+.cpi-pct{font-size:.72rem;color:var(--ink-soft);flex-shrink:0}
+.session-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.session-item:last-child{border-bottom:none}
+.si-icon{font-size:1.2rem;width:28px;text-align:center}
+.si-info{flex:1}.si-time{font-size:.72rem;color:var(--ink-soft);margin-top:2px}
+.si-xp{font-weight:700;color:var(--sage-dark);flex-shrink:0}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.qa-item{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;text-align:center;cursor:pointer;transition:transform .2s,box-shadow .2s;text-decoration:none;color:var(--ink);display:block}
+.qa-item:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.qa-icon{font-size:1.8rem;margin-bottom:8px}.qa-label{font-size:.78rem;font-weight:600}
+@media(max-width:768px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="index.html">Study<span>Vibes</span> 🌿</a></div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="sideAvatar">🐸</div>
+      <div><div class="su-name" id="sideName">Loading...</div><div class="su-level" id="sideLevel">Level 1</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Menu</div>
+      <a href="dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a href="courses.html"><span class="nav-icon">📚</span>Kursus</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span>Leaderboard</a>
+      <a href="profile.html"><span class="nav-icon">👤</span>Profil Saya</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="index.html"><span>🌿</span>Beranda</a>
+      <a data-signout><span>🚪</span>Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-xp">⭐ <span id="topXP">0</span> XP</div>
+        <a href="profile.html" id="topAvatar" style="font-size:1.6rem">🐸</a>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div id="loadingState" class="spinner"></div>
+      <div id="mainContent" style="display:none">
+
+        <div style="margin-bottom:28px">
+          <h2 id="welcomeMsg">Halo! 👋</h2>
+          <p style="color:var(--ink-soft);margin-top:6px" id="welcomeSub">Semangat belajar hari ini! 🌿</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-grid stagger">
+          <a href="courses.html" class="qa-item"><div class="qa-icon">📚</div><div class="qa-label">Lanjut Belajar</div></a>
+          <a href="leaderboard.html" class="qa-item"><div class="qa-icon">🏆</div><div class="qa-label">Lihat Ranking</div></a>
+          <a href="courses.html" class="qa-item" id="timerShortcut"><div class="qa-icon">⏱️</div><div class="qa-label">Mulai Timer</div></a>
+          <a href="profile.html" class="qa-item"><div class="qa-icon">👤</div><div class="qa-label">Edit Profil</div></a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid stagger">
+          <div class="stat-card"><div class="sc-icon">⭐</div><div class="sc-val" id="statXP">0</div><div class="sc-label">Total XP</div></div>
+          <div class="stat-card"><div class="sc-icon">📊</div><div class="sc-val" id="statLevel">1</div><div class="sc-label">Level Saat Ini</div></div>
+          <div class="stat-card"><div class="sc-icon">📚</div><div class="sc-val" id="statCourses">0</div><div class="sc-label">Kursus Diambil</div></div>
+          <div class="stat-card"><div class="sc-icon">⏱️</div><div class="sc-val" id="statTime">0h</div><div class="sc-label">Jam Belajar</div></div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:22px">
+          <!-- XP & Streak -->
+          <div class="card-flat">
+            <h3 style="margin-bottom:16px">📈 Progress Level</h3>
+            <div class="streak-card">
+              <div class="streak-num" id="streakNum">0</div>
+              <div class="streak-info"><h4>Hari Streak 🔥</h4><p>Terus pertahankan!</p></div>
+            </div>
+            <div class="xp-info"><span id="xpCurrent">0 XP</span><span id="xpNext">Level berikutnya: 100 XP</span></div>
+            <div class="progress-bar"><div class="progress-fill pf-tc" id="xpBar" style="width:0%"></div></div>
+          </div>
+          <!-- Kursus Aktif -->
+          <div class="card-flat">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h3>📚 Kursus Aktif</h3>
+              <a href="courses.html" style="font-size:.78rem;color:var(--terracotta);font-weight:600">Lihat semua →</a>
+            </div>
+            <div id="activeCourses"><div class="spinner" style="margin:20px auto"></div></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Sesi Terakhir -->
+          <div class="card-flat">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h3>⏱️ Sesi Terakhir</h3>
+              <a href="courses.html" style="font-size:.78rem;color:var(--terracotta);font-weight:600">+ Mulai sesi →</a>
+            </div>
+            <div id="recentSessions"></div>
+          </div>
+          <!-- Ranking -->
+          <div class="card-flat">
+            <h3 style="margin-bottom:16px">🏆 Posisi Kamu</h3>
+            <div style="text-align:center;padding:20px 0">
+              <div style="font-family:'Fraunces',serif;font-size:3.5rem;font-weight:800;color:var(--terracotta)" id="rankNum">#-</div>
+              <p style="color:var(--ink-soft);font-size:.85rem;margin-top:4px">dari semua pengguna</p>
+              <a href="leaderboard.html" class="btn btn-primary btn-sm" style="margin-top:16px">Lihat Leaderboard →</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /mainContent -->
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase, requireAuth, getProfile, signOut, calcLevel, xpToNext, xpAtLevel, toast } from './js/supabase.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, staggerAnimate } from './js/ui.js';
+
+initSignOut();
+
+async function init() {
+  const user = await requireAuth();
+  if (!user) return;
+
+  const profile = await getProfile(user.id);
+  if (!profile) return;
+
+  // Sidebar & topbar
+  setSidebarUser(profile);
+  setTopbarUser(profile);
+  initSidebar('dashboard.html');
+
+  // Welcome message
+  const hour  = new Date().getHours();
+  const greet = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
+  document.getElementById('welcomeMsg').textContent  = `${greet}, ${profile.full_name?.split(' ')[0] || profile.username}! 👋`;
+  document.getElementById('welcomeSub').textContent  = `Semangat belajar hari ini! 🌿`;
+
+  // Stats
+  document.getElementById('statXP').textContent    = profile.xp.toLocaleString('id');
+  document.getElementById('statLevel').textContent = profile.level;
+  document.getElementById('streakNum').textContent  = profile.streak || 0;
+
+  // XP bar
+  const lvl   = profile.level, xp = profile.xp;
+  const atLvl = xpAtLevel(lvl), toNext = xpToNext(lvl);
+  const pct   = Math.min(((xp - atLvl) / (toNext - atLvl)) * 100, 100);
+  document.getElementById('xpBar').style.width     = pct + '%';
+  document.getElementById('xpCurrent').textContent = xp.toLocaleString('id') + ' XP';
+  document.getElementById('xpNext').textContent    = `Level ${lvl + 1}: ${toNext.toLocaleString('id')} XP`;
+
+  // Enrollments
+  const { data: enr } = await supabase
+    .from('enrollments')
+    .select('progress, course_id, courses(title, emoji)')
+    .eq('user_id', user.id)
+    .order('enrolled_at', { ascending: false })
+    .limit(5);
+
+  document.getElementById('statCourses').textContent = enr?.length || 0;
+
+  const ac = document.getElementById('activeCourses');
+  if (!enr?.length) {
+    ac.innerHTML = `<div class="empty-state">
+      <div class="es-icon">📭</div>
+      <p>Belum ada kursus. <a href="courses.html" style="color:var(--terracotta)">Mulai sekarang!</a></p>
+    </div>`;
+  } else {
+    ac.innerHTML = enr.map(e => `
+      <div class="course-progress-item">
+        <div class="cpi-icon">${e.courses?.emoji || '📚'}</div>
+        <div class="cpi-info">
+          <div class="cpi-title">${e.courses?.title || 'Kursus'}</div>
+          <div class="cpi-bar"><div class="cpi-fill" style="width:${e.progress}%"></div></div>
+        </div>
+        <span class="cpi-pct">${e.progress}%</span>
+      </div>`).join('');
+  }
+
+  // Study sessions
+  const { data: sess } = await supabase
+    .from('study_sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const totalMin = sess?.reduce((a, s) => a + s.duration_minutes, 0) || 0;
+  document.getElementById('statTime').textContent = `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`;
+
+  const rs = document.getElementById('recentSessions');
+  if (!sess?.length) {
+    rs.innerHTML = `<div class="empty-state"><div class="es-icon">⏰</div><p>Belum ada sesi belajar.</p></div>`;
+  } else {
+    rs.innerHTML = sess.map(s => `
+      <div class="session-item">
+        <span class="si-icon">${s.mode === 'focus' ? '🧠' : '☕'}</span>
+        <div class="si-info">
+          <div>${s.mode === 'focus' ? 'Sesi Fokus' : 'Break'} — ${s.duration_minutes} menit</div>
+          <div class="si-time">${new Date(s.created_at).toLocaleDateString('id', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+        <span class="si-xp">+${s.xp_earned} XP</span>
+      </div>`).join('');
+  }
+
+  // Ranking
+  const { data: ranks } = await supabase.from('leaderboard_view').select('id, rank');
+  const myRank = ranks?.find(r => r.id === user.id);
+  document.getElementById('rankNum').textContent = myRank ? `#${myRank.rank}` : '#-';
+
+  // Show content
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('mainContent').style.display  = 'block';
+  staggerAnimate();
+}
+
+// Timer shortcut
+document.getElementById('timerShortcut')?.addEventListener('click', e => {
+  sessionStorage.setItem('openTimer', '1');
+});
+
+init();
+</script>
+</body>
+</html>

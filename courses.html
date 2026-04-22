@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kursus — StudyVibes 🌿</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.filter-btn{padding:8px 20px;background:white;border:1px solid var(--border);border-radius:100px;cursor:pointer;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:500;color:var(--ink-soft);transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:var(--ink);color:white;border-color:var(--ink)}
+.course-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .25s,box-shadow .25s}
+.course-card:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.course-thumb{height:140px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative}
+.course-enrolled-badge{position:absolute;top:10px;right:10px;background:var(--sage);color:white;padding:3px 10px;border-radius:100px;font-size:.65rem;font-weight:700}
+.course-body{padding:18px 20px 20px}
+.course-cat{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:5px}
+.course-title{font-size:.95rem;font-weight:600;margin-bottom:8px;line-height:1.4}
+.course-meta{display:flex;gap:10px;font-size:.72rem;color:var(--ink-soft);margin-bottom:14px}
+.course-footer{display:flex;align-items:center;justify-content:space-between}
+.course-progress-mini{display:flex;align-items:center;gap:8px}
+.cpm-bar{width:60px;height:5px;background:var(--warm);border-radius:100px;overflow:hidden}
+.cpm-fill{height:100%;background:var(--sage);border-radius:100px}
+.course-start-btn{background:var(--terracotta);color:white;padding:6px 14px;border-radius:100px;font-size:.75rem;font-weight:600}
+/* Timer */
+.timer-section{background:var(--ink);color:white;border-radius:var(--radius);padding:36px;margin-bottom:32px;position:relative;overflow:hidden}
+.timer-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(127,168,122,.18),transparent 60%),radial-gradient(ellipse at 75% 20%,rgba(169,142,214,.15),transparent 60%);pointer-events:none}
+.timer-inner{position:relative;z-index:1;display:flex;gap:40px;align-items:center;flex-wrap:wrap}
+.timer-left{flex-shrink:0}
+.timer-right{flex:1;min-width:280px}
+.mode-btns{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.mode-btn{padding:8px 18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:100px;cursor:pointer;font-family:'Sora',sans-serif;font-size:.8rem;font-weight:500;transition:all .2s}
+.mode-btn.active,.mode-btn:hover{background:var(--terracotta);border-color:var(--terracotta);color:white}
+.timer-display{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.timer-ring{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8}
+.ring-fill{fill:none;stroke:var(--terracotta);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .4s}
+.timer-time{font-family:'Fraunces',serif;font-size:3rem;font-weight:700;color:white;letter-spacing:-2px}
+.timer-status{font-size:.8rem;color:rgba(255,255,255,.5);margin-top:6px;text-align:center}
+.timer-ctrls{display:flex;gap:10px;margin-top:20px}
+.ctrl-ghost{background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.2);box-shadow:none}
+.ctrl-ghost:hover{background:rgba(255,255,255,.18)}
+.music-label{font-size:.74rem;color:rgba(255,255,255,.4);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:18px}
+.track-btns{display:flex;gap:7px;flex-wrap:wrap}
+.track-btn{padding:7px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);border-radius:100px;cursor:pointer;font-family:'Sora',sans-serif;font-size:.75rem;transition:all .2s}
+.track-btn.active,.track-btn:hover{background:var(--sage);border-color:var(--sage);color:white}
+.viz{display:flex;gap:4px;align-items:flex-end;height:28px;margin-top:14px}
+.viz span{display:block;width:4px;background:var(--sage-light);border-radius:3px;min-height:4px}
+.viz.playing span{animation:viz .8s ease-in-out infinite alternate}
+.viz span:nth-child(2){animation-delay:.1s}.viz span:nth-child(3){animation-delay:.2s}
+.viz span:nth-child(4){animation-delay:.05s}.viz span:nth-child(5){animation-delay:.15s}
+.viz span:nth-child(6){animation-delay:.25s}.viz span:nth-child(7){animation-delay:.08s}
+.viz span:nth-child(8){animation-delay:.18s}.viz span:nth-child(9){animation-delay:.12s}
+.viz span:nth-child(10){animation-delay:.22s}
+/* Modal */
+.modal-course-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.modal-course-emoji{font-size:2.5rem}
+.modal-course-desc{color:var(--ink-soft);font-size:.88rem;margin-bottom:20px;line-height:1.65}
+.modal-progress{margin-bottom:20px}
+.lesson-list{display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto}
+.lesson-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--warm);border-radius:var(--radius-sm);cursor:pointer;transition:background .2s}
+.lesson-item:hover{background:#e8d8c4}.lesson-item.done{opacity:.7}
+.li-num{width:28px;height:28px;border-radius:50%;background:var(--terracotta);color:white;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.li-num.done-num{background:var(--sage)}
+.li-body{flex:1}.li-title{font-size:.88rem;font-weight:500}
+.li-desc{font-size:.72rem;color:var(--ink-soft);margin-top:3px}
+.li-xp{font-size:.72rem;font-weight:700;color:var(--sage-dark);flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="index.html">Study<span>Vibes</span> 🌿</a></div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="sideAvatar">🐸</div>
+      <div><div class="su-name" id="sideName">Loading...</div><div class="su-level" id="sideLevel">Level 1</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a href="courses.html"><span class="nav-icon">📚</span>Kursus</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span>Leaderboard</a>
+      <a href="profile.html"><span class="nav-icon">👤</span>Profil Saya</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="index.html"><span>🌿</span>Beranda</a>
+      <a data-signout><span>🚪</span>Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="topbar-title">Kursus & Belajar</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-xp">⭐ <span id="topXP">0</span> XP</div>
+        <span id="topAvatar" style="font-size:1.6rem">🐸</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- POMODORO TIMER -->
+      <div class="timer-section" id="timerSection">
+        <div class="timer-inner">
+          <div class="timer-left">
+            <div class="timer-display">
+              <svg class="timer-ring" width="200" height="200" viewBox="0 0 200 200">
+                <circle class="ring-bg" cx="100" cy="100" r="86"/>
+                <circle class="ring-fill" id="timerRing" cx="100" cy="100" r="86"
+                  stroke-dasharray="540.35" stroke-dashoffset="0"/>
+              </svg>
+              <div style="text-align:center;z-index:1">
+                <div class="timer-time" id="timerDisplay">25:00</div>
+                <div class="timer-status" id="timerStatus">Siap fokus? 💪</div>
+              </div>
+            </div>
+          </div>
+          <div class="timer-right">
+            <h3 style="color:white;margin-bottom:16px">⏱️ Pomodoro Timer</h3>
+            <div class="mode-btns">
+              <button class="mode-btn active" data-mode="focus" data-time="1500">🧠 Fokus 25m</button>
+              <button class="mode-btn" data-mode="short" data-time="300">☕ Break 5m</button>
+              <button class="mode-btn" data-mode="long" data-time="900">🛌 Long 15m</button>
+            </div>
+            <div class="timer-ctrls">
+              <button class="btn btn-primary btn-sm" id="timerStartBtn">▶ Mulai</button>
+              <button class="btn btn-sm ctrl-ghost" id="timerResetBtn">↺ Reset</button>
+            </div>
+            <div class="music-label">🎵 Suasana Belajar</div>
+            <div class="track-btns">
+              <button class="track-btn active" data-track="lofi">🌙 Lo-fi</button>
+              <button class="track-btn" data-track="nature">🌿 Alam</button>
+              <button class="track-btn" data-track="cafe">☕ Cafe</button>
+              <button class="track-btn" data-track="focus">🌊 Deep Focus</button>
+            </div>
+            <div class="viz" id="visualizer">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COURSES LIST -->
+      <div style="margin-bottom:20px">
+        <h2 style="margin-bottom:6px">📚 Semua Kursus</h2>
+        <p style="color:var(--ink-soft);font-size:.9rem">Semua kursus <strong style="color:var(--sage-dark)">100% Gratis!</strong> 🎉</p>
+      </div>
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-btn active" data-filter="all">Semua</button>
+        <button class="filter-btn" data-filter="coding">💻 Coding</button>
+        <button class="filter-btn" data-filter="design">🎨 Design</button>
+        <button class="filter-btn" data-filter="data">📊 Data</button>
+        <button class="filter-btn" data-filter="soft">🧠 Soft Skill</button>
+      </div>
+      <div id="coursesGrid" class="grid-3 stagger"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COURSE DETAIL MODAL -->
+<div class="modal-overlay" id="courseModal">
+  <div class="modal" style="max-width:600px">
+    <button class="modal-close" id="modalCloseBtn">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAuth, getProfile, signOut } from './js/supabase.js';
+import { initCourses, openCourse, enrollCourse, completeLesson } from './js/courses.js';
+import { initTimer } from './js/timer.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, staggerAnimate, closeModal } from './js/ui.js';
+
+// Expose functions called from inline HTML (onclick in dynamically generated content)
+window.openCourse     = openCourse;
+window.enrollCourse   = enrollCourse;
+window.completeLesson = completeLesson;
+
+// Sign out & sidebar
+initSignOut();
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// Modal close
+document.getElementById('modalCloseBtn')?.addEventListener('click', () => closeModal('courseModal'));
+document.getElementById('courseModal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('courseModal')) closeModal('courseModal');
+});
+
+async function init() {
+  const user = await requireAuth();
+  if (!user) return;
+
+  const profile = await getProfile(user.id);
+  setSidebarUser(profile);
+  setTopbarUser(profile);
+  initSidebar('courses.html');
+
+  // Init courses list
+  await initCourses(user.id);
+
+  // Init pomodoro timer
+  initTimer(user.id);
+
+  staggerAnimate();
+
+  // Scroll to timer if flagged from dashboard
+  if (sessionStorage.getItem('openTimer')) {
+    sessionStorage.removeItem('openTimer');
+    document.getElementById('timerSection')?.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -11,8 +11,8 @@
 
 | Item       | Link                                          |
 | ---------- | --------------------------------------------- |
-| 🌐 Live Web | *(isi link deploy kamu)*                      |
-| 💻 GitHub   | *(isi link repo kamu)*                        |
+| 🌐 Live Web | https://study-vibes.vercel.app/                     |
+| 💻 GitHub   | https://github.com/Raynsar/StudyVibes.git                        |
 | 🗄️ Supabase | https://clqabolfmbksgfqzdaoo.supabase.co      |
 
 ---

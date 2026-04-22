@@ -33,8 +33,6 @@
 </style>
 </head>
 <body>
-<div class="page-loader" id="pageLoader">
-  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
 </div>
 <div id="toast"></div>
@@ -143,7 +141,7 @@
 
 <script type="module">
 import { supabase, requireAuth, getProfile, signOut, calcLevel, xpToNext, xpAtLevel, toast } from './js/supabase.js';
-import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, staggerAnimate, hideLoader } from './js/ui.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, staggerAnimate } from './js/ui.js';
 
 initSignOut();
 
@@ -239,7 +237,6 @@ async function init() {
 
   // Show content
   document.getElementById('loadingState').style.display = 'none';
-  hideLoader();
   document.getElementById('mainContent').style.display  = 'block';
   staggerAnimate();
 }

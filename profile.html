@@ -26,8 +26,6 @@
 </style>
 </head>
 <body>
-<div class="page-loader" id="pageLoader">
-  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
 </div>
 <div id="toast"></div>
@@ -93,7 +91,7 @@
 <script type="module">
 import { requireAuth, signOut } from './js/supabase.js';
 import { initProfile, openEditModal, saveProfile, changePassword } from './js/profile.js';
-import { initSidebar, initSignOut, closeModal, hideLoader } from './js/ui.js';
+import { initSidebar, initSignOut, closeModal } from './js/ui.js';
 
 // Expose for inline onclick in dynamically rendered HTML
 window.openEditModal  = openEditModal;
@@ -116,7 +114,6 @@ async function init() {
   if (!user) return;
   initSidebar('profile.html');
   await initProfile(user.id);
-  hideLoader();
 }
 
 init();

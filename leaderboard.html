@@ -43,8 +43,6 @@
 </style>
 </head>
 <body>
-<div class="page-loader" id="pageLoader">
-  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
 </div>
 <div id="toast"></div>
@@ -112,7 +110,7 @@
 <script type="module">
 import { requireAuth, getProfile, signOut } from './js/supabase.js';
 import { initLeaderboard } from './js/leaderboard.js';
-import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, hideLoader } from './js/ui.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut } from './js/ui.js';
 
 initSignOut();
 document.getElementById('menuToggle')?.addEventListener('click', () => {
@@ -129,7 +127,6 @@ async function init() {
   initSidebar('leaderboard.html');
 
   await initLeaderboard(user.id);
-  hideLoader();
 }
 
 init();

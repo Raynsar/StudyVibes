@@ -4,6 +4,10 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Leaderboard — StudyVibes 🌿</title>
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="dns-prefetch" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm">
 <style>
 .lb-hero{background:linear-gradient(135deg,var(--ink),#3d2e1c);border-radius:var(--radius);padding:36px;color:white;margin-bottom:28px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .lb-hero::before{content:'🏆';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.06;pointer-events:none}
@@ -39,6 +43,10 @@
 </style>
 </head>
 <body>
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
 <div id="toast"></div>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
@@ -104,7 +112,7 @@
 <script type="module">
 import { requireAuth, getProfile, signOut } from './js/supabase.js';
 import { initLeaderboard } from './js/leaderboard.js';
-import { setSidebarUser, setTopbarUser, initSidebar, initSignOut } from './js/ui.js';
+import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, hideLoader } from './js/ui.js';
 
 initSignOut();
 document.getElementById('menuToggle')?.addEventListener('click', () => {
@@ -121,6 +129,7 @@ async function init() {
   initSidebar('leaderboard.html');
 
   await initLeaderboard(user.id);
+  hideLoader();
 }
 
 init();

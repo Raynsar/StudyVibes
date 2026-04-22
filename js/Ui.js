@@ -1,116 +1,101 @@
-// js/ui.js — Shared UI helpers
-import { signOut } from './supabase.js';
+// js/supabase.js
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// ---- SIDEBAR ----
-export function initSidebar(activeHref) {
-  // toggle mobile
-  document.getElementById('menuToggle')?.addEventListener('click', toggleSidebar);
-  document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
-
-  // mark active link
-  if (activeHref) {
-    document.querySelectorAll('.sidebar-nav a').forEach(a => {
-      if (a.getAttribute('href') === activeHref) a.classList.add('active');
-      else a.classList.remove('active');
-    });
+export const supabase = createClient(
+  'https://clqabolfmbksgfqzdaoo.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscWFib2xmbWJrc2dmcXpkYW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjIwNjcsImV4cCI6MjA5MjMzODA2N30.efTSGEg8TbTkoqyR0meDVgpalkJ7M3Pn22WHd79bJ8o',
+  {
+    auth: {
+      persistSession:     true,
+      autoRefreshToken:   true,
+      detectSessionInUrl: false,
+      storageKey:         'studyvibes-auth'
+    },
+    global: {
+      fetch: (url, options = {}) =>
+        Promise.race([
+          fetch(url, options),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 8000)
+          )
+        ])
+    }
   }
+);
+
+// ---- Session cache (hindari bolak-balik request) ----
+let _session = null;
+let _sessionLoaded = false;
+
+supabase.auth.onAuthStateChange((_, session) => {
+  _session       = session;
+  _sessionLoaded = true;
+});
+
+export async function getSession() {
+  if (_sessionLoaded) return _session;
+  const { data: { session } } = await supabase.auth.getSession();
+  _session       = session;
+  _sessionLoaded = true;
+  return session;
 }
 
-export function toggleSidebar() {
-  document.getElementById('sidebar')?.classList.toggle('open');
-  document.getElementById('sidebarOverlay')?.classList.toggle('show');
+export async function getUser() {
+  const s = await getSession();
+  return s?.user ?? null;
 }
 
-// Sidebar overlay (mobile backdrop)
-export function injectOverlay() {
-  if (document.getElementById('sidebarOverlay')) return;
-  const div = document.createElement('div');
-  div.id = 'sidebarOverlay';
-  div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(42,31,20,.4);z-index:199;';
-  div.classList.add = div.classList.add;
-  document.body.appendChild(div);
-  div.addEventListener('click', toggleSidebar);
-  // show/hide via class
-  const style = document.createElement('style');
-  style.textContent = '#sidebarOverlay.show{display:block}';
-  document.head.appendChild(style);
+export async function getProfile(uid) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', uid)
+    .single();
+  return data;
 }
 
-// ---- TOPBAR USER ----
-export function setTopbarUser(profile) {
-  const el = document.getElementById('topXP');
-  if (el) el.textContent = (profile.xp||0).toLocaleString('id');
-  const av = document.getElementById('topAvatar');
-  if (av) av.textContent = profile.avatar_emoji || '🐸';
+export async function requireAuth(r = 'login.html') {
+  const u = await getUser();
+  if (!u) { location.href = r; return null; }
+  return u;
 }
 
-// ---- SIDEBAR USER ----
-export function setSidebarUser(profile) {
-  const av   = document.getElementById('sideAvatar');
-  const name = document.getElementById('sideName');
-  const lvl  = document.getElementById('sideLevel');
-  if (av)   av.textContent   = profile.avatar_emoji || '🐸';
-  if (name) name.textContent = profile.full_name || profile.username || 'User';
-  if (lvl)  lvl.textContent  = `Level ${profile.level||1} · ${(profile.xp||0).toLocaleString('id')} XP`;
+export async function requireAdmin() {
+  const u = await requireAuth();
+  if (!u) return null;
+  const p = await getProfile(u.id);
+  if (!p || p.role !== 'admin') { location.href = 'dashboard.html'; return null; }
+  return { user: u, profile: p };
 }
 
-// ---- SCROLL REVEAL ----
-export function initScrollReveal() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+export async function signOut() {
+  _session       = null;
+  _sessionLoaded = false;
+  await supabase.auth.signOut();
+  location.href = 'login.html';
 }
 
-// ---- STAGGER ANIMATE ----
-export function staggerAnimate(selector = '.stagger') {
-  setTimeout(() => {
-    document.querySelectorAll(selector).forEach(el => el.classList.add('loaded'));
-  }, 80);
+export function calcLevel(xp)  { return Math.floor(Math.sqrt(xp / 100)) + 1; }
+export function xpToNext(lvl)  { return Math.pow(lvl, 2) * 100; }
+export function xpAtLevel(lvl) { return Math.pow(lvl - 1, 2) * 100; }
+
+export async function addXP(uid, amt) {
+  const p = await getProfile(uid);
+  if (!p) return;
+  const nx = p.xp + amt, nl = calcLevel(nx);
+  await supabase.from('profiles')
+    .update({ xp: nx, level: nl, last_active: new Date().toISOString().split('T')[0] })
+    .eq('id', uid);
+  return { newXP: nx, newLevel: nl, leveledUp: nl > p.level };
 }
 
-// ---- COUNTER ANIMATION ----
-export function animateCounters() {
-  document.querySelectorAll('[data-count]').forEach(el => {
-    const target = parseInt(el.dataset.count);
-    const suffix = el.dataset.suffix || '+';
-    let current  = 0;
-    const step   = Math.ceil(target / 60);
-    const timer  = setInterval(() => {
-      current = Math.min(current + step, target);
-      el.textContent = current.toLocaleString('id') + suffix;
-      if (current >= target) clearInterval(timer);
-    }, 20);
-  });
+export function toast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className   = `show ${type}`;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = '', 3200);
 }
 
-// ---- NAVBAR SCROLL ----
-export function initNavbarScroll(navId = 'navbar') {
-  window.addEventListener('scroll', () => {
-    document.getElementById(navId)?.classList.toggle('scrolled', window.scrollY > 40);
-  });
-}
-
-// ---- MODAL HELPERS ----
-export function openModal(id)  { document.getElementById(id)?.classList.add('open'); }
-export function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
-
-export function closeOnOverlay(modalId) {
-  const overlay = document.getElementById(modalId);
-  overlay?.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-}
-
-// ---- SIGN OUT ----
-export function initSignOut() {
-  document.querySelectorAll('[data-signout]').forEach(el => {
-    el.addEventListener('click', () => signOut());
-  });
-}
+export const AVATARS = ['🐸','🦁','🦊','🐯','🐼','🦅','🦋','🐬','🦄','🐉','🌟','🎯','🚀','🌈','🔥','🎨'];

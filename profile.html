@@ -4,6 +4,10 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Profil — StudyVibes 🌿</title>
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="dns-prefetch" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm">
 <style>
 .profile-hero{background:linear-gradient(135deg,var(--ink),#3d2e1c);border-radius:var(--radius);padding:36px;color:white;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
 .ph-avatar{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12);font-size:2.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:3px solid rgba(255,255,255,.2)}
@@ -22,6 +26,10 @@
 </style>
 </head>
 <body>
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
 <div id="toast"></div>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
@@ -85,7 +93,7 @@
 <script type="module">
 import { requireAuth, signOut } from './js/supabase.js';
 import { initProfile, openEditModal, saveProfile, changePassword } from './js/profile.js';
-import { initSidebar, initSignOut, closeModal } from './js/ui.js';
+import { initSidebar, initSignOut, closeModal, hideLoader } from './js/ui.js';
 
 // Expose for inline onclick in dynamically rendered HTML
 window.openEditModal  = openEditModal;
@@ -108,6 +116,7 @@ async function init() {
   if (!user) return;
   initSidebar('profile.html');
   await initProfile(user.id);
+  hideLoader();
 }
 
 init();

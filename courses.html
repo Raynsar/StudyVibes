@@ -4,6 +4,10 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Kursus — StudyVibes 🌿</title>
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="dns-prefetch" href="https://clqabolfmbksgfqzdaoo.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="script" crossorigin href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm">
 <style>
 .filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
 .filter-btn{padding:8px 20px;background:white;border:1px solid var(--border);border-radius:100px;cursor:pointer;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:500;color:var(--ink-soft);transition:all .2s}
@@ -67,6 +71,10 @@
 </style>
 </head>
 <body>
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
 <div id="toast"></div>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
@@ -206,6 +214,7 @@ async function init() {
   initTimer(user.id);
 
   staggerAnimate();
+  hideLoader();
 
   // Scroll to timer if flagged from dashboard
   if (sessionStorage.getItem('openTimer')) {

@@ -1,4 +1,4 @@
-// js/supabase.js — Supabase client & shared utilities
+// js/supabase.js
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 export const supabase = createClient(
@@ -6,21 +6,37 @@ export const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscWFib2xmbWJrc2dmcXpkYW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjIwNjcsImV4cCI6MjA5MjMzODA2N30.efTSGEg8TbTkoqyR0meDVgpalkJ7M3Pn22WHd79bJ8o',
   {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false
+      persistSession:     true,
+      autoRefreshToken:   true,
+      detectSessionInUrl: false,
+      storageKey:         'studyvibes-auth'
+    },
+    global: {
+      fetch: (url, options = {}) =>
+        Promise.race([
+          fetch(url, options),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 8000)
+          )
+        ])
     }
   }
 );
 
-// Cache session supaya tidak bolak-balik request ke Supabase
-let _sessionCache = null;
+// ---- Session cache (hindari bolak-balik request) ----
+let _session = null;
+let _sessionLoaded = false;
+
+supabase.auth.onAuthStateChange((_, session) => {
+  _session       = session;
+  _sessionLoaded = true;
+});
 
 export async function getSession() {
-  if (_sessionCache) return _sessionCache;
+  if (_sessionLoaded) return _session;
   const { data: { session } } = await supabase.auth.getSession();
-  _sessionCache = session;
-  supabase.auth.onAuthStateChange((_, s) => { _sessionCache = s; });
+  _session       = session;
+  _sessionLoaded = true;
   return session;
 }
 
@@ -53,13 +69,14 @@ export async function requireAdmin() {
 }
 
 export async function signOut() {
-  _sessionCache = null;
+  _session       = null;
+  _sessionLoaded = false;
   await supabase.auth.signOut();
   location.href = 'login.html';
 }
 
-export function calcLevel(xp) { return Math.floor(Math.sqrt(xp / 100)) + 1; }
-export function xpToNext(lvl) { return Math.pow(lvl, 2) * 100; }
+export function calcLevel(xp)  { return Math.floor(Math.sqrt(xp / 100)) + 1; }
+export function xpToNext(lvl)  { return Math.pow(lvl, 2) * 100; }
 export function xpAtLevel(lvl) { return Math.pow(lvl - 1, 2) * 100; }
 
 export async function addXP(uid, amt) {
@@ -76,7 +93,7 @@ export function toast(msg, type = 'info') {
   const t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
-  t.className = `show ${type}`;
+  t.className   = `show ${type}`;
   clearTimeout(t._t);
   t._t = setTimeout(() => t.className = '', 3200);
 }

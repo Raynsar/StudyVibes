@@ -71,8 +71,6 @@
 </style>
 </head>
 <body>
-<div class="page-loader" id="pageLoader">
-  <div class="loader-logo">Study<span>Vibes</span> 🌿</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
 </div>
 <div id="toast"></div>
@@ -214,7 +212,6 @@ async function init() {
   initTimer(user.id);
 
   staggerAnimate();
-  hideLoader();
 
   // Scroll to timer if flagged from dashboard
   if (sessionStorage.getItem('openTimer')) {

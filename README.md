@@ -295,24 +295,4 @@ dan **Database Integration.**
 
 ---
 
-## 📝 Deploy ke GitHub Pages
-
-```bash
-# 1. Inisialisasi git
-git init
-git add .
-git commit -m "StudyVibes v1.0 - Daily Project 7"
-
-# 2. Push ke GitHub
-git remote add origin https://github.com/username/studyvibes.git
-git push -u origin main
-
-# 3. Aktifkan GitHub Pages
-# Buka: Settings → Pages → Source: main branch → / (root) → Save
-```
-
-Setelah aktif, akses di: `https://username.github.io/studyvibes/`
-
----
-
 *© 2025 StudyVibes — Daily Project 7 · Rekayasa Kebutuhan · Universitas Muhammadiyah Malang*

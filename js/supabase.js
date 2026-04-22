@@ -10,21 +10,12 @@ export const supabase = createClient(
       autoRefreshToken:   true,
       detectSessionInUrl: false,
       storageKey:         'studyvibes-auth'
-    },
-    global: {
-      fetch: (url, options = {}) =>
-        Promise.race([
-          fetch(url, options),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), 8000)
-          )
-        ])
     }
   }
 );
 
-// ---- Session cache (hindari bolak-balik request) ----
-let _session = null;
+// ---- Session cache ----
+let _session       = null;
 let _sessionLoaded = false;
 
 supabase.auth.onAuthStateChange((_, session) => {
@@ -47,10 +38,7 @@ export async function getUser() {
 
 export async function getProfile(uid) {
   const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', uid)
-    .single();
+    .from('profiles').select('*').eq('id', uid).single();
   return data;
 }
 
@@ -69,8 +57,7 @@ export async function requireAdmin() {
 }
 
 export async function signOut() {
-  _session       = null;
-  _sessionLoaded = false;
+  _session = null; _sessionLoaded = false;
   await supabase.auth.signOut();
   location.href = 'login.html';
 }
@@ -80,8 +67,7 @@ export function xpToNext(lvl)  { return Math.pow(lvl, 2) * 100; }
 export function xpAtLevel(lvl) { return Math.pow(lvl - 1, 2) * 100; }
 
 export async function addXP(uid, amt) {
-  const p = await getProfile(uid);
-  if (!p) return;
+  const p = await getProfile(uid); if (!p) return;
   const nx = p.xp + amt, nl = calcLevel(nx);
   await supabase.from('profiles')
     .update({ xp: nx, level: nl, last_active: new Date().toISOString().split('T')[0] })
@@ -90,12 +76,9 @@ export async function addXP(uid, amt) {
 }
 
 export function toast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.className   = `show ${type}`;
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.className = '', 3200);
+  const t = document.getElementById('toast'); if (!t) return;
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3200);
 }
 
 export const AVATARS = ['🐸','🦁','🦊','🐯','🐼','🦅','🦋','🐬','🦄','🐉','🌟','🎯','🚀','🌈','🔥','🎨'];

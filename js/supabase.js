@@ -10,6 +10,21 @@ export const supabase = createClient(
       autoRefreshToken:   true,
       detectSessionInUrl: false,
       storageKey:         'studyvibes-auth'
+    },
+    global: {
+      fetch: async (url, options = {}) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        try {
+          const res = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          return res;
+        } catch (e) {
+          clearTimeout(timeoutId);
+          console.error('Supabase fetch failed:', e.message);
+          throw e;
+        }
+      }
     }
   }
 );
@@ -25,10 +40,19 @@ supabase.auth.onAuthStateChange((_, session) => {
 
 export async function getSession() {
   if (_sessionLoaded) return _session;
-  const { data: { session } } = await supabase.auth.getSession();
-  _session       = session;
-  _sessionLoaded = true;
-  return session;
+  try {
+    const { data: { session } } = await Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 10000))
+    ]);
+    _session = session;
+    _sessionLoaded = true;
+    return session;
+  } catch (e) {
+    console.error('Auth session failed:', e);
+    _sessionLoaded = true;
+    return null;
+  }
 }
 
 export async function getUser() {
@@ -37,15 +61,32 @@ export async function getUser() {
 }
 
 export async function getProfile(uid) {
-  const { data } = await supabase
-    .from('profiles').select('*').eq('id', uid).single();
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('profiles').select('*').eq('id', uid).single();
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.error('Profile load failed:', e);
+    return { full_name: 'Guest User', username: 'guest', avatar_emoji: '👤', xp: 0, level: 1, streak: 0 };
+  }
 }
 
 export async function requireAuth(r = 'login.html') {
-  const u = await getUser();
-  if (!u) { location.href = r; return null; }
-  return u;
+  try {
+    const u = await getUser();
+    if (!u) { 
+      toast('Session expired, redirecting...', 'warning');
+      setTimeout(() => location.href = r, 1500); 
+      return null; 
+    }
+    return u;
+  } catch (e) {
+    console.error('Auth required failed:', e);
+    window.isOfflineMode = true;
+    toast('Offline mode enabled - limited features', 'warning');
+    return { id: 'offline-user', email: 'guest@offline', isOffline: true };
+  }
 }
 
 export async function requireAdmin() {
@@ -82,3 +123,13 @@ export function toast(msg, type = 'info') {
 }
 
 export const AVATARS = ['🐸','🦁','🦊','🐯','🐼','🦅','🦋','🐬','🦄','🐉','🌟','🎯','🚀','🌈','🔥','🎨'];
+
+// Offline retry utils
+window.retryAuth = async () => {
+  _session = null; _sessionLoaded = false;
+  window.isOfflineMode = false;
+  toast('Retrying connection...');
+  setTimeout(() => location.reload(), 1000);
+};
+
+window.isSupabaseOffline = () => !!window.isOfflineMode;

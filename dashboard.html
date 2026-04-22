@@ -139,113 +139,101 @@
 </div>
 
 <script type="module">
+import './js/error-ui.js';
+
 import { supabase, requireAuth, getProfile, signOut, calcLevel, xpToNext, xpAtLevel, toast } from './js/supabase.js';
 import { setSidebarUser, setTopbarUser, initSidebar, initSignOut, staggerAnimate } from './js/ui.js';
 
 initSignOut();
 
-async function init() {
+safeInit(async () => {
   const user = await requireAuth();
   if (!user) return;
 
   const profile = await getProfile(user.id);
-  if (!profile) return;
 
-  // Sidebar & topbar
   setSidebarUser(profile);
   setTopbarUser(profile);
   initSidebar('dashboard.html');
 
-  // Welcome message
-  const hour  = new Date().getHours();
+  const hour = new Date().getHours();
   const greet = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
-  document.getElementById('welcomeMsg').textContent  = `${greet}, ${profile.full_name?.split(' ')[0] || profile.username}! 👋`;
-  document.getElementById('welcomeSub').textContent  = `Semangat belajar hari ini! 🌿`;
+  document.getElementById('welcomeMsg').textContent = greet + ', ' + (profile.full_name?.split(' ')[0] || profile.username) + '! 👋';
+  document.getElementById('welcomeSub').textContent = 'Semangat belajar hari ini! 🌿';
 
-  // Stats
-  document.getElementById('statXP').textContent    = profile.xp.toLocaleString('id');
+  document.getElementById('statXP').textContent = profile.xp.toLocaleString('id');
   document.getElementById('statLevel').textContent = profile.level;
-  document.getElementById('streakNum').textContent  = profile.streak || 0;
+  document.getElementById('streakNum').textContent = profile.streak || 0;
 
-  // XP bar
-  const lvl   = profile.level, xp = profile.xp;
+  const lvl = profile.level, xp = profile.xp;
   const atLvl = xpAtLevel(lvl), toNext = xpToNext(lvl);
-  const pct   = Math.min(((xp - atLvl) / (toNext - atLvl)) * 100, 100);
-  document.getElementById('xpBar').style.width     = pct + '%';
+  const pct = Math.min(((xp - atLvl) / (toNext - atLvl)) * 100, 100);
+  document.getElementById('xpBar').style.width = pct + '%';
   document.getElementById('xpCurrent').textContent = xp.toLocaleString('id') + ' XP';
-  document.getElementById('xpNext').textContent    = `Level ${lvl + 1}: ${toNext.toLocaleString('id')} XP`;
+  document.getElementById('xpNext').textContent = 'Level ' + (lvl + 1) + ': ' + toNext.toLocaleString('id') + ' XP';
 
-  // Enrollments
-  const { data: enr } = await supabase
-    .from('enrollments')
-    .select('progress, course_id, courses(title, emoji)')
-    .eq('user_id', user.id)
-    .order('enrolled_at', { ascending: false })
-    .limit(5);
-
-  document.getElementById('statCourses').textContent = enr?.length || 0;
-
-  const ac = document.getElementById('activeCourses');
-  if (!enr?.length) {
-    ac.innerHTML = `<div class="empty-state">
-      <div class="es-icon">📭</div>
-      <p>Belum ada kursus. <a href="courses.html" style="color:var(--terracotta)">Mulai sekarang!</a></p>
-    </div>`;
-  } else {
-    ac.innerHTML = enr.map(e => `
-      <div class="course-progress-item">
-        <div class="cpi-icon">${e.courses?.emoji || '📚'}</div>
-        <div class="cpi-info">
-          <div class="cpi-title">${e.courses?.title || 'Kursus'}</div>
-          <div class="cpi-bar"><div class="cpi-fill" style="width:${e.progress}%"></div></div>
-        </div>
-        <span class="cpi-pct">${e.progress}%</span>
-      </div>`).join('');
-  }
-
-  // Study sessions
-  const { data: sess } = await supabase
-    .from('study_sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  const totalMin = sess?.reduce((a, s) => a + s.duration_minutes, 0) || 0;
-  document.getElementById('statTime').textContent = `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`;
-
-  const rs = document.getElementById('recentSessions');
-  if (!sess?.length) {
-    rs.innerHTML = `<div class="empty-state"><div class="es-icon">⏰</div><p>Belum ada sesi belajar.</p></div>`;
-  } else {
-    rs.innerHTML = sess.map(s => `
-      <div class="session-item">
-        <span class="si-icon">${s.mode === 'focus' ? '🧠' : '☕'}</span>
-        <div class="si-info">
-          <div>${s.mode === 'focus' ? 'Sesi Fokus' : 'Break'} — ${s.duration_minutes} menit</div>
-          <div class="si-time">${new Date(s.created_at).toLocaleDateString('id', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-        <span class="si-xp">+${s.xp_earned} XP</span>
-      </div>`).join('');
-  }
-
-  // Ranking
-  const { data: ranks } = await supabase.from('leaderboard_view').select('id, rank');
-  const myRank = ranks?.find(r => r.id === user.id);
-  document.getElementById('rankNum').textContent = myRank ? `#${myRank.rank}` : '#-';
-
-  // Show content
-  document.getElementById('loadingState').style.display = 'none';
-  document.getElementById('mainContent').style.display  = 'block';
   staggerAnimate();
-}
+}, 'dashboard');
 
-// Timer shortcut
-document.getElementById('timerShortcut')?.addEventListener('click', e => {
+// Async data (non-blocking)
+(async () => {
+  try {
+    const user = await getUser();
+    if (!user) return;
+
+    const [enr, sess, ranks] = await Promise.all([
+      supabase.from('enrollments').select('progress, course_id, courses(title, emoji)').eq('user_id', user.id).order('enrolled_at', { ascending: false }).limit(5),
+      supabase.from('study_sessions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('leaderboard_view').select('id, rank')
+    ]);
+
+    document.getElementById('statCourses').textContent = enr.data?.length || 0;
+
+    const ac = document.getElementById('activeCourses');
+    if (ac) {
+      if (!enr.data?.length) {
+        ac.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>Belum ada kursus. <a href="courses.html" style="color:var(--terracotta)">Mulai sekarang!</a></p></div>';
+      } else {
+        ac.innerHTML = enr.data.map(e => 
+          '<div class="course-progress-item">' +
+          '<div class="cpi-icon">' + (e.courses?.emoji || '📚') + '</div>' +
+          '<div class="cpi-info">' +
+          '<div class="cpi-title">' + (e.courses?.title || 'Kursus') + '</div>' +
+          '<div class="cpi-bar"><div class="cpi-fill" style="width:' + e.progress + '%"></div></div>' +
+          '</div>' +
+          '<span class="cpi-pct">' + e.progress + '%</span>' +
+          '</div>'
+        ).join('');
+      }
+    }
+
+    const totalMin = sess.data?.reduce((a, s) => a + s.duration_minutes, 0) || 0;
+    document.getElementById('statTime').textContent = Math.floor(totalMin / 60) + 'h ' + (totalMin % 60) + 'm';
+
+    const rs = document.getElementById('recentSessions');
+    if (rs && sess.data?.length) {
+      rs.innerHTML = sess.data.map(s => 
+        '<div class="session-item">' +
+        '<span class="si-icon">' + (s.mode === 'focus' ? '🧠' : '☕') + '</span>' +
+        '<div class="si-info">' +
+        '<div>' + (s.mode === 'focus' ? 'Sesi Fokus' : 'Break') + ' — ' + s.duration_minutes + ' menit</div>' +
+        '<div class="si-time">' + new Date(s.created_at).toLocaleDateString('id', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div>' +
+        '</div>' +
+        '<span class="si-xp">+' + s.xp_earned + ' XP</span>' +
+        '</div>'
+      ).join('');
+    }
+
+    const myRank = ranks.data?.find(r => r.id === user.id);
+    document.getElementById('rankNum').textContent = myRank ? '#' + myRank.rank : '#-';
+  } catch (e) {
+    console.warn('Dashboard async data failed:', e);
+  }
+})();
+
+document.getElementById('timerShortcut')?.addEventListener('click', () => {
   sessionStorage.setItem('openTimer', '1');
 });
-
-init();
 </script>
 </body>
 </html>

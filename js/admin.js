@@ -6,27 +6,24 @@ export let allCourses = [];
 
 // ---- OVERVIEW ----
 export async function loadOverview() {
-  const [
-    { count: uc },
-    { count: cc },
-    { count: sc },
-    { data: xpData }
-  ] = await Promise.all([
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'user'),
-    supabase.from('courses').select('id',  { count: 'exact', head: true }),
-    supabase.from('study_sessions').select('id', { count: 'exact', head: true }),
-    supabase.from('study_sessions').select('xp_earned')
-  ]);
+  // Query satu per satu, tidak pakai Promise.all
+  const { count: uc } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'user');
+  const { count: cc } = await supabase.from('courses').select('id', { count: 'exact', head: true });
+  const { count: sc } = await supabase.from('study_sessions').select('id', { count: 'exact', head: true });
+  const { data: xpData } = await supabase.from('study_sessions').select('xp_earned');
 
   const totalXP = xpData?.reduce((a, s) => a + s.xp_earned, 0) || 0;
 
-  document.getElementById('overviewStats').innerHTML = `
+  const el = document.getElementById('overviewStats');
+  if (!el) return;
+  el.innerHTML = `
     <div class="stat-card"><div class="sc-icon">👥</div><div class="sc-val">${uc||0}</div><div class="sc-label">Total Pengguna</div></div>
     <div class="stat-card"><div class="sc-icon">📚</div><div class="sc-val">${cc||0}</div><div class="sc-label">Total Kursus</div></div>
     <div class="stat-card"><div class="sc-icon">⏱️</div><div class="sc-val">${sc||0}</div><div class="sc-label">Total Sesi</div></div>
     <div class="stat-card"><div class="sc-icon">⭐</div><div class="sc-val">${(totalXP/1000).toFixed(1)}K</div><div class="sc-label">XP Diberikan</div></div>`;
-  document.getElementById('overviewStats').classList.add('loaded');
+  el.classList.add('loaded');
 
+  // Load charts di background
   loadCharts();
 }
 
@@ -35,7 +32,8 @@ async function loadCharts() {
   const { data: topU } = await supabase.from('profiles')
     .select('full_name,username,xp').eq('role','user').order('xp',{ascending:false}).limit(10);
   const maxU = topU?.[0]?.xp || 1;
-  document.getElementById('topUsersChart').innerHTML =
+  const topUsersEl = document.getElementById('topUsersChart');
+  if (topUsersEl) topUsersEl.innerHTML =
     `<div class="chart-bar-wrap">${(topU||[]).map(u=>`
       <div class="chart-row">
         <div class="chart-label">${u.full_name||u.username}</div>
@@ -43,13 +41,14 @@ async function loadCharts() {
         <div class="chart-val">${u.xp.toLocaleString('id')}</div>
       </div>`).join('')}</div>`;
 
-  // Top courses by enrollment
+  // Top courses
   const { data: enrData } = await supabase.from('enrollments').select('course_id,courses(title)');
   const cCount = {};
   (enrData||[]).forEach(e=>{ const t=e.courses?.title||'Unknown'; cCount[t]=(cCount[t]||0)+1; });
   const sorted = Object.entries(cCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const maxC = sorted[0]?.[1]||1;
-  document.getElementById('topCoursesChart').innerHTML =
+  const topCoursesEl = document.getElementById('topCoursesChart');
+  if (topCoursesEl) topCoursesEl.innerHTML =
     `<div class="chart-bar-wrap">${sorted.map(([t,c])=>`
       <div class="chart-row">
         <div class="chart-label">${t}</div>
@@ -57,7 +56,7 @@ async function loadCharts() {
         <div class="chart-val">${c}</div>
       </div>`).join('')}</div>`;
 
-  // Sessions per day (last 7 days)
+  // Sessions per day
   const { data: sSess } = await supabase.from('study_sessions')
     .select('created_at,duration_minutes')
     .gte('created_at', new Date(Date.now()-7*86400000).toISOString());
@@ -65,7 +64,8 @@ async function loadCharts() {
   for (let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); dayMap[d.toISOString().split('T')[0]]=0; }
   (sSess||[]).forEach(s=>{ const d=s.created_at.split('T')[0]; if(dayMap[d]!==undefined) dayMap[d]+=s.duration_minutes; });
   const maxDay = Math.max(...Object.values(dayMap))||1;
-  document.getElementById('sessionChart').innerHTML =
+  const sessionChartEl = document.getElementById('sessionChart');
+  if (sessionChartEl) sessionChartEl.innerHTML =
     `<div class="chart-bar-wrap">${Object.entries(dayMap).map(([d,m])=>`
       <div class="chart-row">
         <div class="chart-label">${new Date(d).toLocaleDateString('id',{weekday:'short',day:'numeric',month:'short'})}</div>
@@ -82,14 +82,11 @@ export async function loadUsers() {
 }
 
 export function renderUsers(users) {
-  document.getElementById('usersTable').innerHTML = users.map(u => `
+  const el = document.getElementById('usersTable');
+  if (!el) return;
+  el.innerHTML = users.map(u => `
     <tr>
-      <td>
-        <div class="user-avatar-cell">
-          <div class="ua-emoji">${u.avatar_emoji}</div>
-          <div><div class="ua-name">${u.full_name||'-'}</div><div class="ua-email">@${u.username}</div></div>
-        </div>
-      </td>
+      <td><div class="user-avatar-cell"><div class="ua-emoji">${u.avatar_emoji}</div><div><div class="ua-name">${u.full_name||'-'}</div><div class="ua-email">@${u.username}</div></div></div></td>
       <td><span class="badge badge-blue">Lvl ${u.level}</span></td>
       <td>${u.xp.toLocaleString('id')}</td>
       <td>${u.streak||0} 🔥</td>
@@ -107,8 +104,7 @@ export function renderUsers(users) {
 export function filterUsers() {
   const q = document.getElementById('userSearch')?.value.toLowerCase()||'';
   renderUsers(allUsers.filter(u =>
-    (u.full_name||'').toLowerCase().includes(q) ||
-    u.username.toLowerCase().includes(q)
+    (u.full_name||'').toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
   ));
 }
 
@@ -145,7 +141,7 @@ export async function toggleAdmin(id, role) {
 }
 
 export async function deleteUser(id) {
-  if(!confirm('Yakin hapus pengguna ini? Semua data akan hilang.')) return;
+  if(!confirm('Yakin hapus pengguna ini?')) return;
   await supabase.from('profiles').delete().eq('id',id);
   toast('Pengguna dihapus','info');
   await loadUsers();
@@ -180,24 +176,17 @@ export async function loadAdminCourses() {
   const { data } = await supabase.from('courses').select('*').order('created_at');
   allCourses = data || [];
   renderAdminCourses();
-  // populate lesson filter dropdown
   const sel = document.getElementById('lessonCourseFilter');
   if (sel) sel.innerHTML = '<option value="">Pilih Kursus...</option>' +
     allCourses.map(c=>`<option value="${c.id}">${c.emoji} ${c.title}</option>`).join('');
 }
 
 export function renderAdminCourses() {
-  document.getElementById('coursesTable').innerHTML = allCourses.map(c=>`
+  const el = document.getElementById('coursesTable');
+  if (!el) return;
+  el.innerHTML = allCourses.map(c=>`
     <tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:1.4rem">${c.emoji}</span>
-          <div>
-            <div style="font-weight:600;font-size:.88rem">${c.title}</div>
-            <div style="font-size:.7rem;color:var(--ink-soft)">${(c.description||'').slice(0,50)}...</div>
-          </div>
-        </div>
-      </td>
+      <td><div style="display:flex;align-items:center;gap:10px"><span style="font-size:1.4rem">${c.emoji}</span><div><div style="font-weight:600;font-size:.88rem">${c.title}</div><div style="font-size:.7rem;color:var(--ink-soft)">${(c.description||'').slice(0,50)}...</div></div></div></td>
       <td><span class="badge badge-blue">${c.category}</span></td>
       <td>${c.difficulty}</td>
       <td>${c.total_lessons}</td>
@@ -220,16 +209,14 @@ export function openAddCourse() {
         <select id="nc-cat" class="form-input form-select">
           <option value="coding">💻 Coding</option><option value="design">🎨 Design</option>
           <option value="data">📊 Data</option><option value="soft">🧠 Soft Skill</option>
-        </select>
-      </div>
+        </select></div>
       <div class="form-group"><label class="form-label">Emoji</label><input id="nc-emoji" class="form-input" value="📚"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Level</label>
         <select id="nc-diff" class="form-input form-select">
           <option>Pemula</option><option>Menengah</option><option>Lanjutan</option><option>Semua Level</option>
-        </select>
-      </div>
+        </select></div>
       <div class="form-group"><label class="form-label">Warna (hex)</label><input id="nc-color" class="form-input" value="#f0e6d3"></div>
     </div>
     <button class="btn btn-primary btn-block" onclick="saveCourse()">✅ Tambah Kursus</button>`;
@@ -249,19 +236,17 @@ export function editCourse(id) {
           <option value="design" ${c.category==='design'?'selected':''}>🎨 Design</option>
           <option value="data"   ${c.category==='data'  ?'selected':''}>📊 Data</option>
           <option value="soft"   ${c.category==='soft'  ?'selected':''}>🧠 Soft Skill</option>
-        </select>
-      </div>
+        </select></div>
       <div class="form-group"><label class="form-label">Emoji</label><input id="nc-emoji" class="form-input" value="${c.emoji}"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Level</label>
         <select id="nc-diff" class="form-input form-select">
-          <option ${c.difficulty==='Pemula'?'selected':''}>Pemula</option>
-          <option ${c.difficulty==='Menengah'?'selected':''}>Menengah</option>
-          <option ${c.difficulty==='Lanjutan'?'selected':''}>Lanjutan</option>
+          <option ${c.difficulty==='Pemula'    ?'selected':''}>Pemula</option>
+          <option ${c.difficulty==='Menengah'  ?'selected':''}>Menengah</option>
+          <option ${c.difficulty==='Lanjutan'  ?'selected':''}>Lanjutan</option>
           <option ${c.difficulty==='Semua Level'?'selected':''}>Semua Level</option>
-        </select>
-      </div>
+        </select></div>
       <div class="form-group"><label class="form-label">Warna</label><input id="nc-color" class="form-input" value="${c.color}"></div>
     </div>
     <button class="btn btn-primary btn-block" onclick="saveCourse('${id}')">💾 Simpan Perubahan</button>`;
@@ -304,7 +289,9 @@ export async function loadLessons() {
   const cid = document.getElementById('lessonCourseFilter')?.value;
   if (!cid) return;
   const {data} = await supabase.from('lessons').select('*').eq('course_id',cid).order('order_num');
-  document.getElementById('lessonsTable').innerHTML = (data||[]).map(l=>`
+  const el = document.getElementById('lessonsTable');
+  if (!el) return;
+  el.innerHTML = (data||[]).map(l=>`
     <tr>
       <td>${l.order_num}</td>
       <td>${l.title}</td>
@@ -315,7 +302,7 @@ export async function loadLessons() {
         <button class="btn btn-xs btn-danger" onclick="deleteLesson('${l.id}')">🗑️</button>
       </td>
     </tr>`).join('') ||
-    '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-soft)">Belum ada materi di kursus ini</td></tr>';
+    '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-soft)">Belum ada materi</td></tr>';
 }
 
 export function openAddLesson() {
@@ -325,8 +312,7 @@ export function openAddLesson() {
     <div class="form-group"><label class="form-label">Kursus</label>
       <select id="nl-course" class="form-input form-select">
         ${allCourses.map(c=>`<option value="${c.id}" ${c.id===cid?'selected':''}>${c.emoji} ${c.title}</option>`).join('')}
-      </select>
-    </div>
+      </select></div>
     <div class="form-group"><label class="form-label">Judul Materi</label><input id="nl-title" class="form-input" placeholder="Judul pelajaran"></div>
     <div class="form-group"><label class="form-label">Konten / Deskripsi</label><textarea id="nl-content" class="form-input" rows="4" placeholder="Isi materi..."></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -345,8 +331,7 @@ export async function editLesson(id) {
     <div class="form-group"><label class="form-label">Kursus</label>
       <select id="nl-course" class="form-input form-select">
         ${allCourses.map(c=>`<option value="${c.id}" ${c.id===l.course_id?'selected':''}>${c.emoji} ${c.title}</option>`).join('')}
-      </select>
-    </div>
+      </select></div>
     <div class="form-group"><label class="form-label">Judul Materi</label><input id="nl-title" class="form-input" value="${l.title}"></div>
     <div class="form-group"><label class="form-label">Konten</label><textarea id="nl-content" class="form-input" rows="4">${l.content||''}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -358,18 +343,17 @@ export async function editLesson(id) {
 }
 
 export async function saveLesson(id=null) {
-  const course_id  = document.getElementById('nl-course').value;
-  const title      = document.getElementById('nl-title').value.trim();
-  const content    = document.getElementById('nl-content').value.trim();
-  const order_num  = parseInt(document.getElementById('nl-order').value)||1;
-  const xp_reward  = parseInt(document.getElementById('nl-xp').value)||50;
+  const course_id = document.getElementById('nl-course').value;
+  const title     = document.getElementById('nl-title').value.trim();
+  const content   = document.getElementById('nl-content').value.trim();
+  const order_num = parseInt(document.getElementById('nl-order').value)||1;
+  const xp_reward = parseInt(document.getElementById('nl-xp').value)||50;
   if (!title||!course_id) { toast('Isi semua field!','error'); return; }
   const payload = {course_id,title,content,order_num,xp_reward};
   const {error} = id
     ? await supabase.from('lessons').update(payload).eq('id',id)
     : await supabase.from('lessons').insert(payload);
   if (error) { toast('Gagal: '+error.message,'error'); return; }
-  // Sync total_lessons count
   const {count} = await supabase.from('lessons').select('id',{count:'exact',head:true}).eq('course_id',course_id);
   await supabase.from('courses').update({total_lessons:count}).eq('id',course_id);
   toast(`Materi berhasil ${id?'diperbarui':'ditambahkan'}! 🎉`,'success');
@@ -380,7 +364,6 @@ export async function saveLesson(id=null) {
 
 export async function deleteLesson(id) {
   if(!confirm('Hapus materi ini?')) return;
-  // get course_id first
   const {data:l} = await supabase.from('lessons').select('course_id').eq('id',id).single();
   await supabase.from('lessons').delete().eq('id',id);
   if(l?.course_id){
@@ -391,22 +374,18 @@ export async function deleteLesson(id) {
   await loadLessons();
 }
 
-// ---- SESSIONS LOG ----
+// ---- SESSIONS ----
 export async function loadSessions() {
   const {data} = await supabase.from('study_sessions')
     .select('*,profiles(full_name,username,avatar_emoji)')
-    .order('created_at',{ascending:false})
-    .limit(100);
+    .order('created_at',{ascending:false}).limit(100);
   const countEl = document.getElementById('sessionCount');
   if (countEl) countEl.textContent = `${data?.length||0} sesi terakhir`;
-  document.getElementById('sessionsTable').innerHTML = (data||[]).map(s=>`
+  const el = document.getElementById('sessionsTable');
+  if (!el) return;
+  el.innerHTML = (data||[]).map(s=>`
     <tr>
-      <td>
-        <div class="user-avatar-cell">
-          <div class="ua-emoji">${s.profiles?.avatar_emoji||'🐸'}</div>
-          <div class="ua-name">${s.profiles?.full_name||s.profiles?.username||'-'}</div>
-        </div>
-      </td>
+      <td><div class="user-avatar-cell"><div class="ua-emoji">${s.profiles?.avatar_emoji||'🐸'}</div><div class="ua-name">${s.profiles?.full_name||s.profiles?.username||'-'}</div></div></td>
       <td>${s.duration_minutes} menit</td>
       <td><span class="badge ${s.mode==='focus'?'badge-orange':'badge-blue'}">${s.mode==='focus'?'🧠 Fokus':'☕ Break'}</span></td>
       <td><strong>+${s.xp_earned} XP</strong></td>

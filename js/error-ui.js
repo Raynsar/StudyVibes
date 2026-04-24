@@ -49,6 +49,9 @@ window.showOfflineMode = function() {
   document.querySelectorAll('[data-requires-db]').forEach(function(el) { el.style.display = 'none'; });
 };
 
+// Retry auth
+window.retryAuth = function() { location.reload(); };
+
 // Polyfill toast if missing
 if (typeof window.toast === 'undefined') {
   window.toast = function(msg, type) {

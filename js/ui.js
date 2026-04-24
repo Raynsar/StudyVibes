@@ -1,101 +1,70 @@
-// js/supabase.js
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { signOut } from './supabase.js';
 
-export const supabase = createClient(
-  'https://clqabolfmbksgfqzdaoo.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscWFib2xmbWJrc2dmcXpkYW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjIwNjcsImV4cCI6MjA5MjMzODA2N30.efTSGEg8TbTkoqyR0meDVgpalkJ7M3Pn22WHd79bJ8o',
-  {
-    auth: {
-      persistSession:     true,
-      autoRefreshToken:   true,
-      detectSessionInUrl: false,
-      storageKey:         'studyvibes-auth'
-    },
-    global: {
-      fetch: (url, options = {}) =>
-        Promise.race([
-          fetch(url, options),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), 8000)
-          )
-        ])
+export function setSidebarUser(profile) {
+  if (!profile) return;
+  const avatar = document.getElementById('sideAvatar');
+  const name   = document.getElementById('sideName');
+  const level  = document.getElementById('sideLevel');
+  if (avatar) avatar.textContent = profile.avatar_emoji || '🐸';
+  if (name)   name.textContent   = profile.full_name || profile.username || 'User';
+  if (level)  level.textContent  = 'Level ' + (profile.level || 1);
+}
+
+export function setTopbarUser(profile) {
+  if (!profile) return;
+  const xpEl     = document.getElementById('topXP');
+  const avatarEl = document.getElementById('topAvatar');
+  if (xpEl)     xpEl.textContent    = (profile.xp || 0).toLocaleString('id');
+  if (avatarEl) avatarEl.textContent = profile.avatar_emoji || '🐸';
+}
+
+export function initSidebar(activeHref) {
+  document.querySelectorAll('.sidebar-nav a[href]').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === activeHref);
+  });
+}
+
+export function initSignOut() {
+  document.querySelectorAll('[data-signout]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      signOut();
+    });
+  });
+}
+
+export function staggerAnimate() {
+  document.querySelectorAll('.stagger').forEach(el => el.classList.add('loaded'));
+}
+
+export function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+}
+
+export function openModal(id) {
+  document.getElementById(id)?.classList.add('open');
+}
+
+export function initNavbarScroll(id) {
+  const nav = document.getElementById(id);
+  if (!nav) return;
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+}
+
+export function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target   = parseInt(el.dataset.count, 10);
+    const suffix   = el.dataset.suffix || '';
+    const duration = 1600;
+    const start    = performance.now();
+    function tick(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const v = Math.round((1 - Math.pow(1 - p, 3)) * target);
+      el.textContent = v.toLocaleString('id') + suffix;
+      if (p < 1) requestAnimationFrame(tick);
     }
-  }
-);
-
-// ---- Session cache (hindari bolak-balik request) ----
-let _session = null;
-let _sessionLoaded = false;
-
-supabase.auth.onAuthStateChange((_, session) => {
-  _session       = session;
-  _sessionLoaded = true;
-});
-
-export async function getSession() {
-  if (_sessionLoaded) return _session;
-  const { data: { session } } = await supabase.auth.getSession();
-  _session       = session;
-  _sessionLoaded = true;
-  return session;
+    requestAnimationFrame(tick);
+  });
 }
-
-export async function getUser() {
-  const s = await getSession();
-  return s?.user ?? null;
-}
-
-export async function getProfile(uid) {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', uid)
-    .single();
-  return data;
-}
-
-export async function requireAuth(r = 'login.html') {
-  const u = await getUser();
-  if (!u) { location.href = r; return null; }
-  return u;
-}
-
-export async function requireAdmin() {
-  const u = await requireAuth();
-  if (!u) return null;
-  const p = await getProfile(u.id);
-  if (!p || p.role !== 'admin') { location.href = 'dashboard.html'; return null; }
-  return { user: u, profile: p };
-}
-
-export async function signOut() {
-  _session       = null;
-  _sessionLoaded = false;
-  await supabase.auth.signOut();
-  location.href = 'login.html';
-}
-
-export function calcLevel(xp)  { return Math.floor(Math.sqrt(xp / 100)) + 1; }
-export function xpToNext(lvl)  { return Math.pow(lvl, 2) * 100; }
-export function xpAtLevel(lvl) { return Math.pow(lvl - 1, 2) * 100; }
-
-export async function addXP(uid, amt) {
-  const p = await getProfile(uid);
-  if (!p) return;
-  const nx = p.xp + amt, nl = calcLevel(nx);
-  await supabase.from('profiles')
-    .update({ xp: nx, level: nl, last_active: new Date().toISOString().split('T')[0] })
-    .eq('id', uid);
-  return { newXP: nx, newLevel: nl, leveledUp: nl > p.level };
-}
-
-export function toast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.className   = `show ${type}`;
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.className = '', 3200);
-}
-
-export const AVATARS = ['🐸','🦁','🦊','🐯','🐼','🦅','🦋','🐬','🦄','🐉','🌟','🎯','🚀','🌈','🔥','🎨'];
